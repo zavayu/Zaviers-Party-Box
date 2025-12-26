@@ -35,7 +35,7 @@ function App() {
         <div className="bg-gradient-to-br from-gray-800 via-gray-850 to-gray-900 rounded-3xl p-10 shadow-2xl text-center border border-gray-700/70 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(96,165,250,0.12),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_50%_80%,rgba(244,114,182,0.12),transparent_26%)] pointer-events-none" />
           <div className="relative">
-            <img src="/monkeyparty.png" className='h-32 mx-auto' alt="Game Logo" />
+            <img src="./monkeyparty.png" className='h-32 mx-auto' alt="Game Logo" />
             <h1 className="text-4xl font-extrabold text-white mb-4 tracking-tight leading-tight">
               Zavier's Party Box
             </h1>
