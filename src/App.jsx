@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import ImposterGame from './games/ImposterGame'
 import OutlierGame from './games/OutlierGame'
+import WordleGame from './games/WordleGame'
+import WordHuntGame from './games/WordHuntGame'
 
 const GAMES = [
   {
@@ -16,6 +18,20 @@ const GAMES = [
     emoji: '🔍',
     blurb: 'One person gets a different question. Spot the difference.',
     component: OutlierGame,
+  },
+  {
+    id: 'wordle',
+    name: 'Wordle',
+    emoji: '📝',
+    blurb: 'Guess the word in 6 tries. Single player brain teaser.',
+    component: WordleGame,
+  },
+  {
+    id: 'word-hunt',
+    name: 'Word Hunt',
+    emoji: '🔤',
+    blurb: 'Swipe to form words on the board. 80 seconds of word finding fun!',
+    component: WordHuntGame,
   },
 ]
 

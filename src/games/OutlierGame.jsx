@@ -84,7 +84,7 @@ function OutlierGame({ onBack }) {
             >
               ← Games
             </button>
-            <span className="text-gray-400 text-sm">Outlier</span>
+            <span className="text-gray-400 text-sm">Wrong Answer</span>
           </div>
         )}
 
@@ -92,7 +92,7 @@ function OutlierGame({ onBack }) {
         {gamePhase === 'home' && (
           <div className="bg-gray-800 rounded-2xl p-8 text-center shadow-2xl">
             <h1 className="text-6xl font-bold text-white mb-4">🔍</h1>
-            <h2 className="text-4xl font-bold text-white mb-8">Who's the Outlier?</h2>
+            <h2 className="text-4xl font-bold text-white mb-8">Wrong Answer</h2>
             <p className="text-gray-300 mb-8">
               One person gets a different question. Can you spot them?
             </p>
