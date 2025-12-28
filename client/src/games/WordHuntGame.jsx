@@ -152,6 +152,61 @@ export default function WordHuntGame({ onBack }) {
   
   const timerRef = useRef(null)
   const boardRef = useRef(null)
+  const dingAudioRef = useRef(null)
+  const ding4AudioRef = useRef(null)
+  const ding5AudioRef = useRef(null)
+  const ding6AudioRef = useRef(null)
+  const tileSelectAudioRef = useRef(null)
+  const gameStartAudioRef = useRef(null)
+
+  // Initialize audio
+  useEffect(() => {
+    dingAudioRef.current = new Audio('/sounds/word1.wav') // 3 letters
+    ding4AudioRef.current = new Audio('/sounds/word2.wav') // 4 letters
+    ding5AudioRef.current = new Audio('/sounds/word3.wav') // 5 letters
+    ding6AudioRef.current = new Audio('/sounds/word4.wav') // 6+ letters
+    tileSelectAudioRef.current = new Audio('/sounds/tile.wav')
+    gameStartAudioRef.current = new Audio('/sounds/entrance.wav')
+  }, [])
+
+  const playDingSound = (wordLength) => {
+    let audio
+    if (wordLength === 3) {
+      audio = dingAudioRef.current
+    } else if (wordLength === 4) {
+      audio = ding4AudioRef.current
+    } else if (wordLength === 5) {
+      audio = ding5AudioRef.current
+    } else {
+      audio = ding6AudioRef.current
+    }
+    
+    if (audio) {
+      audio.currentTime = 0 // Reset to start
+      audio.play().catch(() => {
+        // Silently fail if audio can't play (e.g., user hasn't interacted with page yet)
+        console.log('Audio play failed')
+      })
+    }
+  }
+
+  const playTileSelectSound = () => {
+    if (tileSelectAudioRef.current) {
+      tileSelectAudioRef.current.currentTime = 0 // Reset to start
+      tileSelectAudioRef.current.play().catch(() => {
+        // Silently fail if audio can't play
+      })
+    }
+  }
+
+  const playGameStartSound = () => {
+    if (gameStartAudioRef.current) {
+      gameStartAudioRef.current.currentTime = 0 // Reset to start
+      gameStartAudioRef.current.play().catch(() => {
+        // Silently fail if audio can't play
+      })
+    }
+  }
 
   // Start game
   const startGame = () => {
@@ -163,6 +218,13 @@ export default function WordHuntGame({ onBack }) {
     setTimeRemaining(80)
     setGamePhase('playing')
     setWordFeedback(null)
+    playGameStartSound()
+  }
+
+  // End game early
+  const endGameEarly = () => {
+    setGamePhase('finished')
+    setTimeRemaining(0)
   }
 
   // Timer
@@ -203,6 +265,7 @@ export default function WordHuntGame({ onBack }) {
     setIsDragging(true)
     setSelectedPath([index])
     setWordFeedback(null)
+    playTileSelectSound()
   }
 
   // Handle pointer move
@@ -267,6 +330,7 @@ export default function WordHuntGame({ onBack }) {
     // Add tile if found
     if (selectedIndex !== null) {
       setSelectedPath(prev => [...prev, selectedIndex])
+      playTileSelectSound()
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(10)
     }
@@ -303,6 +367,7 @@ export default function WordHuntGame({ onBack }) {
       setFoundWords(prev => new Set([...prev, lowerWord]))
       setScore(prev => prev + points)
       setWordFeedback({ word, status: 'valid', points })
+      playDingSound(word.length)
       setTimeout(() => setWordFeedback(null), 1500)
     } else {
       setWordFeedback({ word, status: 'invalid', message: 'Not a word' })
@@ -530,6 +595,13 @@ export default function WordHuntGame({ onBack }) {
         ← Back
       </button>
 
+      <button
+        onClick={endGameEarly}
+        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-sm"
+      >
+        End Game
+      </button>
+
       {/* Header */}
       <div className="w-full max-w-md mb-4 flex justify-between items-center">
         <div className="text-center flex-1">
@@ -539,7 +611,7 @@ export default function WordHuntGame({ onBack }) {
         <div className="text-center flex-1">
           <p className="text-gray-400 text-sm">Time</p>
           <p className={`text-2xl font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
-            {timeRemaining}s
+            {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
           </p>
         </div>
         <div className="text-center flex-1">
