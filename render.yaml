@@ -1,0 +1,31 @@
+services:
+  # WebSocket Server
+  - type: web
+    name: partybox-server
+    runtime: node
+    rootDir: ./server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: partybox-server
+          property: port
+    healthCheckPath: /health
+
+  # Static Client
+  - type: web
+    name: partybox-client
+    runtime: static
+    rootDir: ./client
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
