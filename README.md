@@ -1,6 +1,6 @@
 # PartyBox 🎉
 
-A collection of party games with both pass-and-play and online multiplayer modes.
+A collection of interactive party games with both pass-and-play and online multiplayer modes.
 
 ## Features
 
@@ -21,79 +21,122 @@ A collection of party games with both pass-and-play and online multiplayer modes
 
 ```
 PartyBox/
-├── client/          # React frontend application
+├── client/              # React frontend application
 │   ├── src/
-│   │   ├── games/   # Game components
-│   │   ├── components/
-│   │   └── hooks/   # Custom React hooks
+│   │   ├── games/       # Game components
+│   │   ├── components/  # UI components
+│   │   ├── game-data/   # Game content and data
+│   │   └── hooks/       # Custom React hooks
 │   └── package.json
-├── server/          # Node.js WebSocket server
-│   ├── games/       # Server-side game logic
-│   ├── handlers/    # Message handlers
-│   ├── models/      # Data models
-│   └── package.json
-└── render.yaml      # Deployment configuration
+│
+└── server/              # Node.js WebSocket server
+    ├── games/           # Server-side game logic
+    ├── handlers/        # WebSocket message handlers
+    ├── models/          # Data models (Room, etc.)
+    ├── utils/           # Utility functions
+    └── package.json
 ```
 
-## Quick Start
+## Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
 
 ### Local Development
 
-1. **Start the server:**
-   ```bash
-   cd server
-   npm install
-   npm start
-   ```
+**1. Clone the repository:**
+```bash
+git clone <repository-url>
+cd PartyBox
+```
 
-2. **Start the client:**
-   ```bash
-   cd client
-   npm install
-   npm run dev
-   ```
+**2. Start the server:**
+```bash
+cd server
+npm install
+npm start
+```
+The server will run on `http://localhost:3001`
 
-3. **Open your browser:**
-   - Navigate to `http://localhost:5173/Zaviers-Party-Box/`
-   - Pass & Play mode works immediately
-   - Online mode requires the server to be running
+**3. Start the client (in a new terminal):**
+```bash
+cd client
+npm install
+npm run dev
+```
+The client will run on `http://localhost:5173`
 
-### Deployment
+**4. Open your browser:**
+- Navigate to `http://localhost:5173`
+- Pass & Play mode works immediately
+- Online mode requires the server to be running
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+## Deployment
 
-**Quick Deploy to Render:**
-1. Push to GitHub
-2. Connect to Render
-3. Deploy using the included `render.yaml`
+This application is deployed on Render with separate services for the client and server.
+
+### Server Deployment (Render Web Service)
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Configure the service:
+   - **Root Directory:** `server`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+4. Deploy and note the server URL
+
+### Client Deployment (Render Static Site)
+1. Create a new Static Site on Render
+2. Connect your GitHub repository
+3. Configure the site:
+   - **Root Directory:** `client`
+   - **Build Command:** `npm install && npm run build`
+   - **Publish Directory:** `dist`
+4. Update the WebSocket URL in your client code to point to your deployed server
+5. Deploy
 
 ## Game Modes
 
 ### Pass & Play
-Perfect for local gatherings - no internet connection required. Players take turns using the same device.
+Perfect for local gatherings - no internet connection required. Players take turns using the same device. All games are available in this mode.
 
 ### Online Multiplayer
-Play with friends remotely using room codes. Features include:
+Play with friends remotely using room codes. Currently available for Secret Word (Imposter) game. Features include:
 - Real-time communication via WebSocket
-- Automatic reconnection
-- Host controls
+- Room creation with unique join codes
+- Automatic reconnection on refresh
+- Host controls for game management
 - Category selection
 - Turn-based chat system
 
 ## Technology Stack
 
-- **Frontend:** React, Vite, Tailwind CSS
-- **Backend:** Node.js, WebSocket (ws library)
-- **Deployment:** Render, GitHub Pages
-- **Development:** Hot reload, ESLint
+**Frontend:**
+- React - UI framework
+- Vite - Build tool and dev server
+- Tailwind CSS - Styling
+- WebSocket API - Real-time communication
+
+**Backend:**
+- Node.js - Runtime environment
+- ws - WebSocket library
+- Express-style architecture
+
+**Deployment:**
+- Render - Hosting platform
+- GitHub - Version control
 
 ## Contributing
 
+Contributions are welcome! To contribute:
+
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Test both pass-and-play and online modes
-5. Submit a pull request
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## License
 

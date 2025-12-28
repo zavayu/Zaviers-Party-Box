@@ -182,16 +182,15 @@ function OnlineImposterGame() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {gamePhase !== 'createJoinRoom' && (
-          <div className="mb-4">
-            <button
-              onClick={() => gamePhase === 'createJoinRoom' ? handleBackToHome() : navigate('/online')}
-              className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
-            >
-              ← {gamePhase === 'createJoinRoom' ? 'Games' : 'Games'}
-            </button>
-          </div>
-        )}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handleBackToHome}
+            className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
+          >
+            ← Games
+          </button>
+          <span className="text-gray-400 text-sm">Secret Word</span>
+        </div>
 
         {gamePhase === 'createJoinRoom' && (
           <RoomManager
@@ -200,6 +199,7 @@ function OnlineImposterGame() {
             onCreateRoom={handleCreateRoom}
             onJoinRoom={handleJoinRoom}
             onClearError={clearError}
+            onBack={handleBackToHome}
             gameTitle="Secret Word"
           />
         )}
