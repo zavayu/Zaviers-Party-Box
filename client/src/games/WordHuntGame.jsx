@@ -152,59 +152,84 @@ export default function WordHuntGame({ onBack }) {
   
   const timerRef = useRef(null)
   const boardRef = useRef(null)
-  const dingAudioRef = useRef(null)
-  const ding4AudioRef = useRef(null)
-  const ding5AudioRef = useRef(null)
-  const ding6AudioRef = useRef(null)
-  const tileSelectAudioRef = useRef(null)
-  const gameStartAudioRef = useRef(null)
+  const audioContextRef = useRef(null)
+  const audioBuffersRef = useRef({})
 
-  // Initialize audio
+  // Initialize Web Audio API for better mobile performance
   useEffect(() => {
-    dingAudioRef.current = new Audio('/sounds/word1.wav') // 3 letters
-    ding4AudioRef.current = new Audio('/sounds/word2.wav') // 4 letters
-    ding5AudioRef.current = new Audio('/sounds/word3.wav') // 5 letters
-    ding6AudioRef.current = new Audio('/sounds/word4.wav') // 6+ letters
-    tileSelectAudioRef.current = new Audio('/sounds/tile.wav')
-    gameStartAudioRef.current = new Audio('/sounds/entrance.wav')
+    // Create audio context (must be done after user interaction on mobile)
+    const initAudio = async () => {
+      try {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
+        
+        // Load and decode all audio files
+        const audioFiles = {
+          word1: '/sounds/word1.wav',
+          word2: '/sounds/word2.wav',
+          word3: '/sounds/word3.wav',
+          word4: '/sounds/word4.wav',
+          tile: '/sounds/tile.wav',
+          gameStart: '/sounds/entrance.wav'
+        }
+        
+        for (const [key, url] of Object.entries(audioFiles)) {
+          try {
+            const response = await fetch(url)
+            const arrayBuffer = await response.arrayBuffer()
+            audioBuffersRef.current[key] = await audioContextRef.current.decodeAudioData(arrayBuffer)
+          } catch (error) {
+            console.log(`Failed to load ${key}:`, error)
+          }
+        }
+      } catch (error) {
+        console.log('Web Audio API not supported:', error)
+      }
+    }
+    
+    initAudio()
+    
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+      }
+    }
   }, [])
 
   const playDingSound = (wordLength) => {
-    let audio
+    let bufferKey
     if (wordLength === 3) {
-      audio = dingAudioRef.current
+      bufferKey = 'word1'
     } else if (wordLength === 4) {
-      audio = ding4AudioRef.current
+      bufferKey = 'word2'
     } else if (wordLength === 5) {
-      audio = ding5AudioRef.current
+      bufferKey = 'word3'
     } else {
-      audio = ding6AudioRef.current
+      bufferKey = 'word4'
     }
     
-    if (audio) {
-      audio.currentTime = 0 // Reset to start
-      audio.play().catch(() => {
-        // Silently fail if audio can't play (e.g., user hasn't interacted with page yet)
-        console.log('Audio play failed')
-      })
+    if (audioContextRef.current && audioBuffersRef.current[bufferKey]) {
+      const source = audioContextRef.current.createBufferSource()
+      source.buffer = audioBuffersRef.current[bufferKey]
+      source.connect(audioContextRef.current.destination)
+      source.start(0)
     }
   }
 
   const playTileSelectSound = () => {
-    if (tileSelectAudioRef.current) {
-      tileSelectAudioRef.current.currentTime = 0 // Reset to start
-      tileSelectAudioRef.current.play().catch(() => {
-        // Silently fail if audio can't play
-      })
+    if (audioContextRef.current && audioBuffersRef.current.tile) {
+      const source = audioContextRef.current.createBufferSource()
+      source.buffer = audioBuffersRef.current.tile
+      source.connect(audioContextRef.current.destination)
+      source.start(0)
     }
   }
 
   const playGameStartSound = () => {
-    if (gameStartAudioRef.current) {
-      gameStartAudioRef.current.currentTime = 0 // Reset to start
-      gameStartAudioRef.current.play().catch(() => {
-        // Silently fail if audio can't play
-      })
+    if (audioContextRef.current && audioBuffersRef.current.gameStart) {
+      const source = audioContextRef.current.createBufferSource()
+      source.buffer = audioBuffersRef.current.gameStart
+      source.connect(audioContextRef.current.destination)
+      source.start(0)
     }
   }
 
@@ -262,6 +287,12 @@ export default function WordHuntGame({ onBack }) {
   // Handle pointer down
   const handlePointerDown = (e, index) => {
     e.preventDefault()
+    
+    // Resume audio context on first user interaction (required for mobile)
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume()
+    }
+    
     setIsDragging(true)
     setSelectedPath([index])
     setWordFeedback(null)
@@ -278,7 +309,7 @@ export default function WordHuntGame({ onBack }) {
     const adjacentIndices = getAdjacentIndices(lastIndex)
     
     let selectedIndex = null
-    const bufferPercent = 0.15 // 15% buffer on each edge
+    const bufferPercent = 0.18 // 18% buffer on each edge
     
     // First pass: check if pointer is directly over any tile (with buffer)
     for (const tile of tiles) {
@@ -327,9 +358,13 @@ export default function WordHuntGame({ onBack }) {
       }
     }
     
-    // Add tile if found
-    if (selectedIndex !== null) {
-      setSelectedPath(prev => [...prev, selectedIndex])
+    // Add tile if found (and it's not already the last tile added)
+    if (selectedIndex !== null && selectedPath[selectedPath.length - 1] !== selectedIndex) {
+      setSelectedPath(prev => {
+        // Double-check it's not already in the path (race condition on mobile)
+        if (prev.includes(selectedIndex)) return prev
+        return [...prev, selectedIndex]
+      })
       playTileSelectSound()
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(10)
