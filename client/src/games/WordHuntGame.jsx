@@ -71,8 +71,8 @@ const findAllPossibleWords = (board) => {
       possibleWords.add(newWord.toLowerCase())
     }
     
-    // Stop if we've reached max length (8 letters)
-    if (newWord.length >= 8) return
+    // Stop if we've reached max length (64 letters)
+    if (newWord.length >= 64) return
     
     // Try extending the word to adjacent tiles
     const adjacent = getAdjacentIndices(index)
@@ -243,6 +243,20 @@ export default function WordHuntGame({ onBack }) {
     setTimeRemaining(80)
     setGamePhase('playing')
     setWordFeedback(null)
+    playGameStartSound()
+  }
+
+  const replayBoard = () => {
+    if (!board.length) return
+    setSelectedPath([])
+    setFoundWords(new Set())
+    setScore(0)
+    setTimeRemaining(80)
+    setGamePhase('playing')
+    setWordFeedback(null)
+    setAllPossibleWords([])
+    setIsCalculatingWords(false)
+    setShowWordPath(null)
     playGameStartSound()
   }
 
@@ -548,6 +562,13 @@ export default function WordHuntGame({ onBack }) {
             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-colors text-lg"
           >
             Play Again
+          </button>
+
+          <button
+            onClick={replayBoard}
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition-colors text-lg"
+          >
+            Play Board Again
           </button>
         </div>
 

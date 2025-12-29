@@ -99,7 +99,8 @@ export function useOnlineGame(gameType) {
             type: 'reconnectToRoom',
             roomCode: storedRoomCode,
             playerName: storedPlayerName,
-            persistentPlayerId: persistentPlayerId
+            persistentPlayerId: persistentPlayerId,
+            expectedGameType: gameType // Include expected game type for reconnection too
           })
         }, 100)
       } else {
@@ -255,7 +256,8 @@ export function useOnlineGame(gameType) {
       type: 'joinRoom',
       roomCode: code.trim().toUpperCase(),
       playerName: name.trim(),
-      persistentPlayerId: persistentPlayerId
+      persistentPlayerId: persistentPlayerId,
+      expectedGameType: gameType // Include the expected game type
     })
   }
 

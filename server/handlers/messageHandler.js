@@ -41,10 +41,10 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
         handleCreateRoom(clientId, message.gameType, message.playerName, message.persistentPlayerId)
         break
       case 'joinRoom':
-        handleJoinRoom(clientId, message.roomCode, message.playerName, message.persistentPlayerId)
+        handleJoinRoom(clientId, message.roomCode, message.playerName, message.persistentPlayerId, message.expectedGameType)
         break
       case 'reconnectToRoom':
-        handleReconnectToRoom(clientId, message.roomCode, message.playerName, message.persistentPlayerId)
+        handleReconnectToRoom(clientId, message.roomCode, message.playerName, message.persistentPlayerId, message.expectedGameType)
         break
       case 'leaveRoom':
         handleLeaveRoom(clientId)
@@ -95,13 +95,21 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     })
   }
 
-  function handleJoinRoom(clientId, roomCode, playerName, persistentPlayerId) {
+  function handleJoinRoom(clientId, roomCode, playerName, persistentPlayerId, expectedGameType = null) {
     const client = clients.get(clientId)
     if (!client) return
 
     const room = rooms.get(roomCode)
     if (!room) {
       sendError(clientId, 'Room not found')
+      return
+    }
+
+    // Check if the game type matches what the client expects
+    if (expectedGameType && room.gameType !== expectedGameType) {
+      const gameConfig = getGameConfig(room.gameType)
+      const expectedConfig = getGameConfig(expectedGameType)
+      sendError(clientId, `This room is for ${gameConfig?.name || room.gameType}, but you selected ${expectedConfig?.name || expectedGameType}. Please go back and select the correct game.`)
       return
     }
 
@@ -147,7 +155,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     }
   }
 
-  function handleReconnectToRoom(clientId, roomCode, playerName, persistentPlayerId) {
+  function handleReconnectToRoom(clientId, roomCode, playerName, persistentPlayerId, expectedGameType = null) {
     console.log(`[RECONNECT] Reconnection attempt: clientId=${clientId}, roomCode=${roomCode}, playerName=${playerName}, persistentId=${persistentPlayerId}`)
     
     const client = clients.get(clientId)
@@ -160,6 +168,14 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     if (!room) {
       console.log(`[RECONNECT] Room ${roomCode} not found for reconnection`)
       sendError(clientId, 'Room not found')
+      return
+    }
+
+    // Check if the game type matches what the client expects
+    if (expectedGameType && room.gameType !== expectedGameType) {
+      const gameConfig = getGameConfig(room.gameType)
+      const expectedConfig = getGameConfig(expectedGameType)
+      sendError(clientId, `This room is for ${gameConfig?.name || room.gameType}, but you selected ${expectedConfig?.name || expectedGameType}. Please go back and select the correct game.`)
       return
     }
 
@@ -203,7 +219,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     } else {
       console.log(`[RECONNECT] Reconnection failed for ${persistentPlayerId}, treating as new join`)
       // Player not found, treat as new join
-      handleJoinRoom(clientId, roomCode, playerName, persistentPlayerId)
+      handleJoinRoom(clientId, roomCode, playerName, persistentPlayerId, expectedGameType)
     }
   }
 
@@ -267,7 +283,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
 
     // Create game instance
     try {
-      const gameInstance = GameFactory.createGame(room.gameType, room)
+      const gameInstance = GameFactory.createGame(room.gameType, room, broadcastToRoom)
       room.setGameInstance(gameInstance)
       
       // Initialize the game
@@ -277,8 +293,15 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
         return
       }
 
-      // Set phase to roleReveal
-      room.gamePhase = 'roleReveal'
+      // Set initial game phase based on game type
+      const gameConfig = getGameConfig(room.gameType)
+      if (gameConfig && gameConfig.phases.length > 1) {
+        // Use the first non-lobby phase
+        room.gamePhase = gameConfig.phases[1]
+      } else {
+        // Fallback to roleReveal for backward compatibility
+        room.gamePhase = 'roleReveal'
+      }
 
       console.log(`Game started in room ${client.roomCode}`)
 
@@ -288,14 +311,29 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
         roomState: room.getRoomState()
       })
 
-      // Send individual player roles
-      room.players.forEach((player, playerId) => {
-        const playerGameState = gameInstance.getPlayerGameState(playerId)
-        sendMessage(playerId, {
-          type: 'playerRole',
-          ...playerGameState
+      // Send individual player roles (only for games that have roles)
+      if (room.gameType === 'secret-word') {
+        room.players.forEach((player, playerId) => {
+          const playerGameState = gameInstance.getPlayerGameState(playerId)
+          sendMessage(playerId, {
+            type: 'playerRole',
+            ...playerGameState
+          })
         })
-      })
+      }
+
+      // Auto-start timer for Word Hunt games
+      if (room.gameType === 'word-hunt') {
+        // Automatically start the game timer
+        const timerResult = gameInstance.handleGameMessage(clientId, { type: 'startGameTimer' })
+        if (timerResult.success) {
+          // Broadcast updated game state with active timer
+          broadcastToRoom(client.roomCode, {
+            type: 'gameStateUpdate',
+            roomState: room.getRoomState()
+          })
+        }
+      }
     } catch (error) {
       console.error('Error starting game:', error)
       sendError(clientId, 'Failed to start game')
@@ -446,6 +484,17 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     if (!result.success) {
       sendError(clientId, result.error)
       return
+    }
+
+    // Handle game-specific responses
+    if (message.type === 'submitWord' && result.success) {
+      // Send word result back to the player
+      sendMessage(clientId, {
+        type: 'wordResult',
+        success: true,
+        word: result.word,
+        points: result.points
+      })
     }
 
     // Broadcast updated game state to all players

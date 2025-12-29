@@ -252,8 +252,8 @@ const GAME_DATA = {
 }
 
 export class ImposterGame extends BaseGame {
-  constructor(room) {
-    super(room)
+  constructor(room, broadcastCallback = null) {
+    super(room, broadcastCallback)
     this.gameType = 'secret-word'
   }
 

@@ -23,6 +23,14 @@ export const GAME_CONFIG = {
     phases: ['lobby', 'questionReveal', 'answering', 'discussion', 'voting', 'results'],
     requiresHost: true,
     turnBased: false
+  },
+  [GAME_TYPES.WORD_HUNT]: {
+    name: 'Word Hunt',
+    minPlayers: 2,
+    maxPlayers: 8,
+    phases: ['lobby', 'playing', 'results'],
+    requiresHost: true,
+    turnBased: false
   }
   // Future games will be added here
 }

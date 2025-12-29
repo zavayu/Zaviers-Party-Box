@@ -10,6 +10,15 @@ const ONLINE_GAMES = [
     maxPlayers: 10,
     route: '/online/secret-word'
   },
+  {
+    id: 'word-hunt',
+    name: 'Word Hunt',
+    emoji: '🔤',
+    description: 'Swipe to form words on a 4x4 grid. Compete for the highest score!',
+    minPlayers: 2,
+    maxPlayers: 8,
+    route: '/online/word-hunt'
+  }
   // Future games will be added here
   // {
   //   id: 'wrong-answer',

@@ -1,9 +1,10 @@
 // Abstract base class for online games
 
 export class BaseGame {
-  constructor(room) {
+  constructor(room, broadcastCallback = null) {
     this.room = room
     this.gameType = null
+    this.broadcastCallback = broadcastCallback
   }
 
   // Abstract methods that must be implemented by subclasses
@@ -33,8 +34,9 @@ export class BaseGame {
 
   // Common utility methods
   broadcastToRoom(message, excludePlayerId = null) {
-    // This would be implemented by the server's broadcast function
-    // For now, it's a placeholder
+    if (this.broadcastCallback) {
+      this.broadcastCallback(this.room.code, message, excludePlayerId)
+    }
   }
 
   getRandomElement(array) {

@@ -4,6 +4,7 @@ import OutlierGame from './games/OutlierGame'
 import WordleGame from './games/WordleGame'
 import WordHuntGame from './games/WordHuntGame'
 import OnlineImposterGame from './games/OnlineImposterGame'
+import OnlineWordHuntGame from './games/OnlineWordHuntGame'
 import OnlineGameSelector from './components/online/OnlineGameSelector'
 import PassAndPlayHome from './components/PassAndPlayHome'
 
@@ -77,6 +78,7 @@ function App() {
       <Route path="/play/word-hunt" element={<GameWrapper GameComponent={WordHuntGame} />} />
       <Route path="/online" element={<OnlineGameSelector />} />
       <Route path="/online/secret-word" element={<OnlineImposterGame />} />
+      <Route path="/online/word-hunt" element={<OnlineWordHuntGame />} />
     </Routes>
   )
 }

@@ -54,27 +54,29 @@ function OnlineGameLobby({
         </p>
       )}
 
-      {/* Game Settings Display */}
-      {gameSettings.selectedCategory ? (
-        <div className="bg-gray-700 rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🎯</span>
-            <div>
-              <div className="text-white font-semibold">Category Selected</div>
-              <div className="text-gray-300 text-sm">{gameSettings.selectedCategory}</div>
+      {/* Game Settings Display - only show if settings are available */}
+      {onOpenSettings && (
+        gameSettings.selectedCategory ? (
+          <div className="bg-gray-700 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🎯</span>
+              <div>
+                <div className="text-white font-semibold">Category Selected</div>
+                <div className="text-gray-300 text-sm">{gameSettings.selectedCategory}</div>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-gray-700 rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🎲</span>
-            <div>
-              <div className="text-white font-semibold">Random Category</div>
-              <div className="text-gray-300 text-sm">Game will choose randomly</div>
+        ) : (
+          <div className="bg-gray-700 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🎲</span>
+              <div>
+                <div className="text-white font-semibold">Random Category</div>
+                <div className="text-gray-300 text-sm">Game will choose randomly</div>
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
       <div className="bg-gray-700 rounded-xl p-6 mb-6">

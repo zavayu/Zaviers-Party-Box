@@ -9,7 +9,7 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "word-list-json": "^0.2.0",
     "ws": "^8.18.0"
   }
 }
-

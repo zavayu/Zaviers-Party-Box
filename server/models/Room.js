@@ -92,7 +92,7 @@ export class Room {
   }
 
   getRoomState() {
-    return {
+    const roomState = {
       code: this.code,
       gameType: this.gameType,
       players: Array.from(this.players.values()).map(player => ({
@@ -102,6 +102,16 @@ export class Room {
       gamePhase: this.gamePhase,
       gameState: this.gameState
     }
+
+    // If there's a game instance, include computed scores
+    if (this.gameInstance && this.gameInstance.getAllPlayerScores) {
+      roomState.gameState = {
+        ...this.gameState,
+        allPlayerScores: this.gameInstance.getAllPlayerScores()
+      }
+    }
+
+    return roomState
   }
 
   getPlayerGameState(playerId) {
