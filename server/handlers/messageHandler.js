@@ -487,14 +487,17 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     }
 
     // Handle game-specific responses
-    if (message.type === 'submitWord' && result.success) {
-      // Send word result back to the player
-      sendMessage(clientId, {
-        type: 'wordResult',
-        success: true,
-        word: result.word,
-        points: result.points
-      })
+    if (message.type === 'submitWord') {
+      if (!result.success) {
+        // Only send error responses - success is handled optimistically on client
+        sendMessage(clientId, {
+          type: 'wordResult',
+          success: false,
+          error: result.error
+        })
+        return // Don't broadcast on error
+      }
+      // On success, just broadcast the updated game state (no individual response needed)
     }
 
     // Broadcast updated game state to all players

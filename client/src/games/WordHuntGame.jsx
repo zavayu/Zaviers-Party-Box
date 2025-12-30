@@ -143,6 +143,7 @@ export default function WordHuntGame({ onBack }) {
   const [selectedPath, setSelectedPath] = useState([])
   const [foundWords, setFoundWords] = useState(new Set())
   const [score, setScore] = useState(0)
+  const [displayScore, setDisplayScore] = useState(0) // Animated score for display
   const [timeRemaining, setTimeRemaining] = useState(80)
   const [isDragging, setIsDragging] = useState(false)
   const [wordFeedback, setWordFeedback] = useState(null) // { word, status, points, message }
@@ -195,6 +196,32 @@ export default function WordHuntGame({ onBack }) {
     }
   }, [])
 
+  // Animate score changes
+  useEffect(() => {
+    if (displayScore === score) return
+
+    const startScore = displayScore
+    const targetScore = score
+    const duration = 200 // milliseconds
+    const startTime = performance.now()
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      
+      if (progress < 1) {
+        const newScore = Math.round(startScore + (targetScore - startScore) * progress)
+        setDisplayScore(newScore)
+        requestAnimationFrame(animate)
+      } else {
+        setDisplayScore(targetScore)
+      }
+    }
+
+    const animationFrame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [score, displayScore])
+
   const playDingSound = (wordLength) => {
     let bufferKey
     if (wordLength === 3) {
@@ -240,6 +267,7 @@ export default function WordHuntGame({ onBack }) {
     setSelectedPath([])
     setFoundWords(new Set())
     setScore(0)
+    setDisplayScore(0)
     setTimeRemaining(80)
     setGamePhase('playing')
     setWordFeedback(null)
@@ -251,6 +279,7 @@ export default function WordHuntGame({ onBack }) {
     setSelectedPath([])
     setFoundWords(new Set())
     setScore(0)
+    setDisplayScore(0)
     setTimeRemaining(80)
     setGamePhase('playing')
     setWordFeedback(null)
@@ -323,7 +352,7 @@ export default function WordHuntGame({ onBack }) {
     const adjacentIndices = getAdjacentIndices(lastIndex)
     
     let selectedIndex = null
-    const bufferPercent = 0.18 // 18% buffer on each edge
+    const bufferPercent = 0.15 // 15% buffer on each edge
     
     // First pass: check if pointer is directly over any tile (with buffer)
     for (const tile of tiles) {
@@ -509,7 +538,7 @@ export default function WordHuntGame({ onBack }) {
               <div className="bg-gray-800 rounded-xl p-6 space-y-4">
                 <div>
                   <p className="text-gray-400 text-sm">Final Score</p>
-                  <p className="text-5xl font-black text-white">{score.toLocaleString()}</p>
+                  <p className="text-5xl font-black text-white">{score === 0 ? '0000' : score.toLocaleString()}</p>
                   <p className="text-gray-500 text-xs mt-1">Max possible: {maxPossibleScore.toLocaleString()}</p>
                 </div>
             
@@ -659,20 +688,33 @@ export default function WordHuntGame({ onBack }) {
       </button>
 
       {/* Header */}
-      <div className="w-full max-w-md mb-4 flex justify-between items-center">
-        <div className="text-center flex-1">
-          <p className="text-gray-400 text-sm">Score</p>
-          <p className="text-2xl font-bold text-white">{score.toLocaleString()}</p>
+      <div className="w-full max-w-md mb-4 relative">
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl relative z-10">
+          <div className="flex items-center gap-6">
+            {/* Profile Picture */}
+            <div className="shrink-0 w-18 h-18 rounded-full p-2 bg-[#3B82F6] items-center justify-center text-white font-bold text-2xl shadow-lg">
+              <img src="/monkeyparty.png" alt="profile picture" />
+            </div>
+            
+            {/* Stats */}
+            <div className="space-y-1 flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-gray-400 text-2xl font-extrabold">WORDS:</span>
+                <span className="text-blue-400 font-bold text-2xl">{foundWords.size}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-gray-400 text-4xl font-extrabold">SCORE:</span>
+                <span className="text-white font-black text-4xl">{displayScore === 0 ? '0000' : displayScore.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="text-center flex-1">
-          <p className="text-gray-400 text-sm">Time</p>
-          <p className={`text-2xl font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
+        
+        {/* Timer hanging from right side */}
+        <div className="absolute -bottom-10 right-0 bg-gray-800 n     rounded-xl px-4 py-2 shadow-xl z-0">
+          <p className={`text-lg font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
             {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
           </p>
-        </div>
-        <div className="text-center flex-1">
-          <p className="text-gray-400 text-sm">Words</p>
-          <p className="text-2xl font-bold text-blue-400">{foundWords.size}</p>
         </div>
       </div>
 

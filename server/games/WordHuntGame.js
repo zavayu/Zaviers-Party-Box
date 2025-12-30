@@ -155,17 +155,17 @@ export class WordHuntGame extends BaseGame {
       return { success: false, error: 'Game is not active' }
     }
 
-    // Validate word length
+    // Validate word length (basic anti-cheat)
     if (!word || word.length < 3) {
       return { success: false, error: 'Word must be at least 3 letters' }
     }
 
-    // Validate path
+    // Validate path (anti-cheat - ensure path is valid on server)
     if (!path || !Array.isArray(path) || path.length !== word.length) {
       return { success: false, error: 'Invalid word path' }
     }
 
-    // Validate path is on the board and forms the word
+    // Validate path is on the board and forms the word (critical anti-cheat)
     if (!this.validateWordPath(word, path)) {
       return { success: false, error: 'Invalid word path on board' }
     }
@@ -173,19 +173,20 @@ export class WordHuntGame extends BaseGame {
     const lowerWord = word.toLowerCase()
     const playerData = this.room.gameState.playerScores[playerId]
 
-    // Check if player already found this word
+    // Check if player already found this word (server-side duplicate check)
     if (playerData.foundWords.includes(lowerWord)) {
       return { success: false, error: 'Word already found' }
     }
 
-    // Check if word is in dictionary
+    // Server-side dictionary validation (anti-cheat fallback)
+    // This is mainly to prevent cheating, client should have already validated
     if (!WORD_HUNT_DICTIONARY.has(lowerWord)) {
       return { success: false, error: 'Word not in dictionary' }
     }
 
     // Add word and calculate score
     const points = calculateScore(word.length)
-    playerData.foundWords.push(lowerWord) // Use push instead of add
+    playerData.foundWords.push(lowerWord)
     playerData.score += points
 
     console.log(`Player ${playerId} found word "${word}" for ${points} points in room ${this.room.code}`)

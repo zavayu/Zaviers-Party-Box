@@ -10,7 +10,7 @@ const getAdjacentIndices = (index) => {
   const row = Math.floor(index / 4)
   const col = index % 4
   const adjacent = []
-  
+
   for (let r = row - 1; r <= row + 1; r++) {
     for (let c = col - 1; c <= col + 1; c++) {
       if (r >= 0 && r < 4 && c >= 0 && c < 4) {
@@ -19,7 +19,7 @@ const getAdjacentIndices = (index) => {
       }
     }
   }
-  
+
   return adjacent
 }
 
@@ -68,6 +68,7 @@ function OnlineWordHuntGame() {
   const [selectedPath, setSelectedPath] = useState([])
   const [foundWords, setFoundWords] = useState(new Set())
   const [playerScore, setPlayerScore] = useState(0)
+  const [displayPlayerScore, setDisplayPlayerScore] = useState(0) // Animated score for display
   const [timeRemaining, setTimeRemaining] = useState(80)
   const [gameStartTime, setGameStartTime] = useState(null)
   const [gameDuration, setGameDuration] = useState(80)
@@ -75,7 +76,7 @@ function OnlineWordHuntGame() {
   const [isDragging, setIsDragging] = useState(false)
   const [wordFeedback, setWordFeedback] = useState(null)
   const [allPlayerScores, setAllPlayerScores] = useState({})
-  
+
   const boardRef = useRef(null)
   const audioContextRef = useRef(null)
   const audioBuffersRef = useRef({})
@@ -86,7 +87,7 @@ function OnlineWordHuntGame() {
     const initAudio = async () => {
       try {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
-        
+
         const audioFiles = {
           word1: '/sounds/word1.wav',
           word2: '/sounds/word2.wav',
@@ -95,7 +96,7 @@ function OnlineWordHuntGame() {
           tile: '/sounds/tile.wav',
           gameStart: '/sounds/entrance.wav'
         }
-        
+
         for (const [key, url] of Object.entries(audioFiles)) {
           try {
             const response = await fetch(url)
@@ -109,15 +110,41 @@ function OnlineWordHuntGame() {
         console.log('Web Audio API not supported:', error)
       }
     }
-    
+
     initAudio()
-    
+
     return () => {
       if (audioContextRef.current) {
         audioContextRef.current.close()
       }
     }
   }, [])
+
+  // Animate score changes
+  useEffect(() => {
+    if (displayPlayerScore === playerScore) return
+
+    const startScore = displayPlayerScore
+    const targetScore = playerScore
+    const duration = 200 // milliseconds
+    const startTime = performance.now()
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      
+      if (progress < 1) {
+        const newScore = Math.round(startScore + (targetScore - startScore) * progress)
+        setDisplayPlayerScore(newScore)
+        requestAnimationFrame(animate)
+      } else {
+        setDisplayPlayerScore(targetScore)
+      }
+    }
+
+    const animationFrame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [playerScore, displayPlayerScore])
 
   // Client-side timer for smooth countdown
   useEffect(() => {
@@ -127,7 +154,7 @@ function OnlineWordHuntGame() {
         const elapsed = Math.floor((Date.now() - gameStartTime) / 1000)
         const remaining = Math.max(0, gameDuration - elapsed)
         setTimeRemaining(remaining)
-        
+
         // Stop timer when it reaches 0
         if (remaining <= 0) {
           clearInterval(clientTimerRef.current)
@@ -159,9 +186,15 @@ function OnlineWordHuntGame() {
       if (message.roomState.gameState) {
         const gs = message.roomState.gameState
         setBoard(gs.board || [])
+
+        // Play sound when game starts
+        if (gs.isGameActive && !isGameActive) {
+          playGameStartSound()
+        }
+
         setIsGameActive(gs.isGameActive || false)
         setAllPlayerScores(gs.allPlayerScores || {})
-        
+
         // Update timing information
         if (gs.gameStartTime) {
           setGameStartTime(gs.gameStartTime)
@@ -169,27 +202,30 @@ function OnlineWordHuntGame() {
         if (gs.gameDuration) {
           setGameDuration(gs.gameDuration)
         }
-        
+
         // Set server time as fallback, but client timer will take over
         if (gs.timeRemaining !== undefined) {
           setTimeRemaining(gs.timeRemaining)
         }
-        
-        // Update current player's data
+
+        // Update current player's data (server state takes precedence)
         const currentId = clientIdRef.current || clientId
         if (currentId && gs.playerScores && gs.playerScores[currentId]) {
           const playerData = gs.playerScores[currentId]
+          // Only update if server state is different (to avoid overriding optimistic updates unnecessarily)
           setPlayerScore(playerData.score || 0)
-          setFoundWords(new Set(playerData.foundWords || [])) // foundWords is now an array
+          setDisplayPlayerScore(playerData.score || 0)
+          setFoundWords(new Set(playerData.foundWords || []))
         }
       }
-      
+
       // Reset local game state when returning to lobby
       if (message.roomState.gamePhase === 'lobby') {
         setBoard([])
         setSelectedPath([])
         setFoundWords(new Set())
         setPlayerScore(0)
+        setDisplayPlayerScore(0)
         setTimeRemaining(80)
         setGameStartTime(null)
         setGameDuration(80)
@@ -200,21 +236,27 @@ function OnlineWordHuntGame() {
     })
 
     const cleanupWordResult = onMessage('wordResult', (message) => {
-      if (message.success) {
-        setWordFeedback({ 
-          word: message.word, 
-          status: 'valid', 
-          points: message.points 
+      // Server response - mainly for error correction or anti-cheat
+      if (!message.success) {
+        // Server rejected the word - revert optimistic update
+        const currentId = clientIdRef.current || clientId
+        if (currentId && allPlayerScores[currentId]) {
+          // Revert to server state
+          const serverPlayerData = allPlayerScores[currentId]
+          setPlayerScore(serverPlayerData.score || 0)
+          setDisplayPlayerScore(serverPlayerData.score || 0)
+          setFoundWords(new Set(serverPlayerData.foundWords || []))
+        }
+
+        // Show error feedback
+        setWordFeedback({
+          word: selectedPath.map(i => board[i]).join(''),
+          status: 'invalid',
+          message: message.error
         })
-        playDingSound(message.word.length)
-      } else {
-        setWordFeedback({ 
-          word: selectedPath.map(i => board[i]).join(''), 
-          status: 'invalid', 
-          message: message.error 
-        })
+        setTimeout(() => setWordFeedback(null), 1500)
       }
-      setTimeout(() => setWordFeedback(null), 1500)
+      // If success, we already handled it optimistically, no need to do anything
     })
 
     return () => {
@@ -230,7 +272,7 @@ function OnlineWordHuntGame() {
     else if (wordLength === 4) bufferKey = 'word2'
     else if (wordLength === 5) bufferKey = 'word3'
     else bufferKey = 'word4'
-    
+
     if (audioContextRef.current && audioBuffersRef.current[bufferKey]) {
       const source = audioContextRef.current.createBufferSource()
       source.buffer = audioBuffersRef.current[bufferKey]
@@ -283,13 +325,14 @@ function OnlineWordHuntGame() {
     setSelectedPath([])
     setFoundWords(new Set())
     setPlayerScore(0)
+    setDisplayPlayerScore(0)
     setTimeRemaining(80)
     setGameStartTime(null)
     setGameDuration(80)
     setIsGameActive(false)
     setWordFeedback(null)
     setAllPlayerScores({})
-    
+
     // Clear client timer
     if (clientTimerRef.current) {
       clearInterval(clientTimerRef.current)
@@ -300,14 +343,14 @@ function OnlineWordHuntGame() {
   // Touch/mouse handlers for board interaction
   const handlePointerDown = (e, index) => {
     e.preventDefault()
-    
+
     if (!isGameActive) return
-    
+
     // Resume audio context on first user interaction
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume()
     }
-    
+
     setIsDragging(true)
     setSelectedPath([index])
     setWordFeedback(null)
@@ -316,21 +359,21 @@ function OnlineWordHuntGame() {
 
   const handlePointerMove = (e) => {
     if (!isDragging || !boardRef.current || !isGameActive) return
-    
+
     const tiles = boardRef.current.querySelectorAll('[data-tile-index]')
     const point = { x: e.clientX, y: e.clientY }
     const lastIndex = selectedPath[selectedPath.length - 1]
     const adjacentIndices = getAdjacentIndices(lastIndex)
-    
+
     let selectedIndex = null
-    const bufferPercent = 0.18
-    
+    const bufferPercent = 0.15
+
     // Check if pointer is over any tile
     for (const tile of tiles) {
       const rect = tile.getBoundingClientRect()
       const bufferX = rect.width * bufferPercent
       const bufferY = rect.height * bufferPercent
-      
+
       if (
         point.x >= rect.left + bufferX &&
         point.x <= rect.right - bufferX &&
@@ -344,7 +387,7 @@ function OnlineWordHuntGame() {
         }
       }
     }
-    
+
     // Add tile if found
     if (selectedIndex !== null && selectedPath[selectedPath.length - 1] !== selectedIndex) {
       setSelectedPath(prev => {
@@ -358,35 +401,62 @@ function OnlineWordHuntGame() {
 
   const handlePointerUp = () => {
     if (!isDragging || !isGameActive) return
-    
+
     setIsDragging(false)
-    
+
     if (selectedPath.length >= 3) {
       const word = selectedPath.map(i => board[i]).join('')
       submitWord(word, selectedPath)
     }
-    
+
     setSelectedPath([])
   }
 
   const submitWord = (word, path) => {
     if (!isConnected || !isGameActive) return
-    
+
     const lowerWord = word.toLowerCase()
-    
+
     // Check if already found locally (for immediate feedback)
     if (foundWords.has(lowerWord)) {
       setWordFeedback({ word, status: 'duplicate', message: 'Already used' })
       setTimeout(() => setWordFeedback(null), 1500)
       return
     }
-    
-    // Send to server for validation
-    sendMessage({ 
-      type: 'submitWord', 
+
+    // Validate word length locally
+    if (word.length < 3) {
+      setWordFeedback({ word, status: 'invalid', message: 'Too short' })
+      setTimeout(() => setWordFeedback(null), 1500)
+      return
+    }
+
+    // Validate word in dictionary locally
+    if (!WORD_HUNT_DICTIONARY.has(lowerWord)) {
+      setWordFeedback({ word, status: 'invalid', message: 'Not a word' })
+      setTimeout(() => setWordFeedback(null), 1500)
+      return
+    }
+
+    // Word is valid locally, send to server for scoring and sync
+    // Server will do minimal validation (mainly path validation and duplicate check)
+    sendMessage({
+      type: 'submitWord',
       word: lowerWord,
       path: path
     })
+
+    // Optimistically update local state for immediate feedback
+    const points = calculateScore(word.length)
+    setFoundWords(prev => new Set([...prev, lowerWord]))
+    setPlayerScore(prev => prev + points)
+    setWordFeedback({
+      word,
+      status: 'valid',
+      points
+    })
+    playDingSound(word.length)
+    setTimeout(() => setWordFeedback(null), 1500)
   }
 
   return (
@@ -429,29 +499,40 @@ function OnlineWordHuntGame() {
         {gamePhase === 'playing' && (
           <div className="space-y-4">
             {/* Game Header */}
-            <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm">Score</p>
-                  <p className="text-2xl font-bold text-white">{playerScore.toLocaleString()}</p>
+            <div className="relative">
+              <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl relative z-10">
+                <div className="flex items-center gap-4">
+                  {/* Profile Picture */}
+                  <div className="shrink-0 w-18 h-18 rounded-full p-2 bg-[#3B82F6] items-center justify-center text-white font-bold text-2xl shadow-lg">
+                    <img src="/monkeyparty.png" alt="profile picture" />
+                  </div>
+
+                  {/* Stats */}
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-gray-400 text-2xl font-extrabold">WORDS:</span>
+                      <span className="text-blue-400 font-bold text-2xl">{foundWords.size}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-gray-400 text-4xl font-extrabold">SCORE:</span>
+                      <span className="text-white font-black text-4xl">{displayPlayerScore === 0 ? '0000' : displayPlayerScore.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm">Time</p>
-                  <p className={`text-2xl font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
-                    {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm">Words</p>
-                  <p className="text-2xl font-bold text-blue-400">{foundWords.size}</p>
-                </div>
+
+                {!isGameActive && (
+                  <div className="w-full bg-gray-700 text-gray-400 font-bold py-3 px-6 rounded-xl text-center mt-4">
+                    Game starting...
+                  </div>
+                )}
               </div>
 
-              {!isGameActive && (
-                <div className="w-full bg-gray-700 text-gray-400 font-bold py-3 px-6 rounded-xl text-center">
-                  Game starting...
-                </div>
-              )}
+              {/* Timer hanging from right side */}
+              <div className="absolute -bottom-10 right-0 bg-gray-800 rounded-xl px-4 py-2 shadow-xl z-0">
+                <p className={`text-lg font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
+                  {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                </p>
+              </div>
             </div>
 
             {/* Word Feedback */}
@@ -479,7 +560,7 @@ function OnlineWordHuntGame() {
 
             {/* Game Board */}
             {board.length > 0 && (
-              <div 
+              <div
                 ref={boardRef}
                 className="relative w-full aspect-square bg-gray-800 rounded-2xl p-2 select-none"
                 style={{ touchAction: 'none' }}
@@ -498,7 +579,7 @@ function OnlineWordHuntGame() {
                       lineColor = '#16A34A' // Green - valid word
                     }
                   }
-                  
+
                   return (
                     <svg className="absolute inset-0 pointer-events-none z-10" style={{ width: '100%', height: '100%' }}>
                       {selectedPath.slice(0, -1).map((fromIndex, i) => {
@@ -526,7 +607,7 @@ function OnlineWordHuntGame() {
                 <div className="grid grid-cols-4 gap-3 h-full">
                   {board.map((letter, index) => {
                     const isSelected = selectedPath.includes(index)
-                    
+
                     let tileColor = 'bg-gray-700 text-white hover:bg-gray-600'
                     if (isSelected && selectedPath.length >= 3) {
                       const currentWord = selectedPath.map(i => board[i]).join('').toLowerCase()
@@ -540,7 +621,7 @@ function OnlineWordHuntGame() {
                     } else if (isSelected) {
                       tileColor = 'bg-blue-600 text-white'
                     }
-                    
+
                     return (
                       <div
                         key={index}
@@ -574,17 +655,17 @@ function OnlineWordHuntGame() {
             {/* Final Scores Leaderboard */}
             <div className="bg-gray-700 rounded-xl p-6 mb-6">
               <h3 className="text-white font-bold mb-4 text-center">Final Scores</h3>
-              
+
               <div className="space-y-3">
                 {Object.keys(allPlayerScores).length === 0 ? (
                   <div className="text-gray-400 text-center">No scores available</div>
                 ) : (
                   Object.entries(allPlayerScores)
-                    .sort(([,a], [,b]) => b.score - a.score)
+                    .sort(([, a], [, b]) => b.score - a.score)
                     .map(([playerId, data], index) => {
                       const currentId = clientIdRef.current || clientId
                       const isCurrentPlayer = playerId === currentId
-                      
+
                       return (
                         <div key={playerId} className={`rounded-lg p-4 ${isCurrentPlayer ? 'bg-blue-600' : 'bg-gray-600'}`}>
                           <div className="flex items-center justify-between mb-2">
@@ -603,7 +684,7 @@ function OnlineWordHuntGame() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Show player's words */}
                           {data.foundWords && data.foundWords.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-gray-500">
@@ -613,11 +694,10 @@ function OnlineWordHuntGame() {
                                   .map(word => (
                                     <span
                                       key={word}
-                                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        isCurrentPlayer 
-                                          ? 'bg-blue-700 text-blue-100' 
+                                      className={`px-2 py-1 rounded-full text-xs font-medium ${isCurrentPlayer
+                                          ? 'bg-blue-700 text-blue-100'
                                           : 'bg-gray-700 text-gray-300'
-                                      }`}
+                                        }`}
                                     >
                                       {word.toUpperCase()}
                                     </span>
