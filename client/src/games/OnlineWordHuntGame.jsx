@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnlineGame } from '../hooks/useOnlineGame'
 import OnlineGameLobby from '../components/online/OnlineGameLobby'
-import RoomManager from '../components/online/RoomManager'
+import CreateJoinRoom from '../components/online/CreateJoinRoom'
+import EnterName from '../components/online/EnterName'
 import { WORD_HUNT_DICTIONARY } from '../game-data/wordHuntData'
 
 // Helper functions (copied from offline version)
@@ -45,6 +46,7 @@ function OnlineWordHuntGame() {
   const navigate = useNavigate()
   const {
     gamePhase,
+    setGamePhase,
     roomCode,
     players,
     clientId,
@@ -55,12 +57,21 @@ function OnlineWordHuntGame() {
     isConnected,
     createRoom,
     joinRoom,
+    createRoomWithoutName,
+    joinRoomWithoutName,
+    enterNameAndJoinRoom,
     leaveRoom,
     startGame,
     sendMessage,
     onMessage,
     clearError,
-    clientIdRef
+    clientIdRef,
+    urlRoomCode,
+    autoJoinAttempted,
+    autoJoinError,
+    clearAutoJoinError,
+    pendingRoomCode,
+    pendingIsHost
   } = useOnlineGame('word-hunt')
 
   // Game-specific state
@@ -308,6 +319,23 @@ function OnlineWordHuntGame() {
     joinRoom(code, name)
   }
 
+  // New separated workflow actions
+  const handleCreateRoomWithoutName = () => {
+    createRoomWithoutName()
+  }
+
+  const handleJoinRoomWithoutName = (code) => {
+    joinRoomWithoutName(code)
+  }
+
+  const handleEnterName = (name) => {
+    enterNameAndJoinRoom(name)
+  }
+
+  const handleBackToCreateJoin = () => {
+    setGamePhase('createJoinRoom')
+  }
+
   const handleStartGame = () => {
     startGame()
   }
@@ -473,13 +501,32 @@ function OnlineWordHuntGame() {
         </div>
 
         {gamePhase === 'createJoinRoom' && (
-          <RoomManager
+          <CreateJoinRoom
             connectionStatus={connectionStatus}
             wsError={wsError}
-            onCreateRoom={handleCreateRoom}
-            onJoinRoom={handleJoinRoom}
+            onCreateRoom={handleCreateRoomWithoutName}
+            onJoinRoom={handleJoinRoomWithoutName}
             onClearError={clearError}
             gameTitle="Word Hunt"
+            initialRoomCode={urlRoomCode}
+            showCreateRoom={!urlRoomCode}
+            autoJoinError={autoJoinError}
+            onClearAutoJoinError={clearAutoJoinError}
+          />
+        )}
+
+        {gamePhase === 'enterName' && (
+          <EnterName
+            connectionStatus={connectionStatus}
+            wsError={wsError}
+            onEnterName={handleEnterName}
+            onBack={handleBackToCreateJoin}
+            onClearError={clearError}
+            gameTitle="Word Hunt"
+            roomCode={pendingRoomCode}
+            isCreatingRoom={pendingIsHost}
+            autoJoinError={autoJoinError}
+            onClearAutoJoinError={clearAutoJoinError}
           />
         )}
 
@@ -493,6 +540,7 @@ function OnlineWordHuntGame() {
             gameTitle="Word Hunt"
             connectionStatus={connectionStatus}
             wsError={wsError}
+            gameType="word-hunt"
           />
         )}
 

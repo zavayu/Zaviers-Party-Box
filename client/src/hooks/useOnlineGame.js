@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useWebSocket } from './useWebSocket'
 
 export function useOnlineGame(gameType) {
+  // Get room code from URL parameters
+  const { roomCode: urlRoomCode } = useParams()
+  
   // Common online game state
   const [gamePhase, setGamePhase] = useState('createJoinRoom')
   const [roomCode, setRoomCode] = useState('')
@@ -10,6 +14,10 @@ export function useOnlineGame(gameType) {
   const [clientId, setClientId] = useState(null)
   const [isHost, setIsHost] = useState(false)
   const [gameState, setGameState] = useState({})
+  const [autoJoinAttempted, setAutoJoinAttempted] = useState(false)
+  const [autoJoinError, setAutoJoinError] = useState(null)
+  const [pendingRoomCode, setPendingRoomCode] = useState('') // For storing room code while entering name
+  const [pendingIsHost, setPendingIsHost] = useState(false) // For storing host status while entering name
   
   // Generate or retrieve persistent player ID
   const [persistentPlayerId] = useState(() => {
@@ -32,6 +40,40 @@ export function useOnlineGame(gameType) {
   
   const clientIdRef = useRef(null)
   const { connectionStatus, error: wsError, connect, disconnect, sendMessage, onMessage, clearError, isConnected } = useWebSocket()
+
+  // Auto-join logic for URL-based room codes
+  useEffect(() => {
+    if (urlRoomCode && connectionStatus === 'connected' && !autoJoinAttempted && gamePhase === 'createJoinRoom') {
+      console.log('[AUTO-JOIN] Detected room code in URL:', urlRoomCode)
+      
+      // Check if we have a stored player name
+      const storedPlayerName = localStorage.getItem('partybox-player-name')
+      
+      if (storedPlayerName && storedPlayerName.trim()) {
+        // Auto-join with stored name
+        console.log('[AUTO-JOIN] Using stored player name:', storedPlayerName)
+        setAutoJoinAttempted(true)
+        
+        if (isConnected) {
+          setRoomCode(urlRoomCode.toUpperCase())
+          setPlayerName(storedPlayerName.trim())
+          sendMessage({
+            type: 'joinRoom',
+            roomCode: urlRoomCode.toUpperCase(),
+            playerName: storedPlayerName.trim(),
+            persistentPlayerId: persistentPlayerId,
+            expectedGameType: gameType
+          })
+        }
+      } else {
+        // Need to prompt for player name - set up for name entry phase
+        console.log('[AUTO-JOIN] No stored name, will prompt user')
+        setPendingRoomCode(urlRoomCode.toUpperCase())
+        setGamePhase('enterName')
+        setAutoJoinAttempted(true)
+      }
+    }
+  }, [urlRoomCode, connectionStatus, autoJoinAttempted, gamePhase, isConnected, sendMessage, persistentPlayerId, gameType])
 
   // Auto-connect when component mounts, but only after message handlers are ready
   useEffect(() => {
@@ -207,6 +249,13 @@ export function useOnlineGame(gameType) {
 
     const cleanupError = onMessage('error', (message) => {
       console.error('Server error:', message.message)
+      
+      // If this is an auto-join error, store it for display
+      if (!autoJoinAttempted && urlRoomCode) {
+        setAutoJoinError(message.message)
+        setAutoJoinAttempted(true) // Prevent retry loops
+      }
+      
       // Don't override connection errors with server errors
       if (connectionStatus === 'connected') {
         // This is a server-side error, not a connection error
@@ -261,6 +310,47 @@ export function useOnlineGame(gameType) {
     })
   }
 
+  // New actions for separated workflow
+  const createRoomWithoutName = () => {
+    if (!isConnected) return
+    setPendingIsHost(true)
+    setGamePhase('enterName')
+  }
+
+  const joinRoomWithoutName = (code) => {
+    if (!isConnected || !code?.trim()) return
+    setPendingRoomCode(code.trim().toUpperCase())
+    setPendingIsHost(false)
+    setGamePhase('enterName')
+  }
+
+  const enterNameAndJoinRoom = (name) => {
+    if (!isConnected || !name?.trim()) return
+    
+    const trimmedName = name.trim()
+    setPlayerName(trimmedName)
+    
+    if (pendingIsHost) {
+      // Create room with name
+      sendMessage({
+        type: 'createRoom',
+        gameType,
+        playerName: trimmedName,
+        persistentPlayerId: persistentPlayerId
+      })
+    } else if (pendingRoomCode) {
+      // Join room with name
+      setRoomCode(pendingRoomCode)
+      sendMessage({
+        type: 'joinRoom',
+        roomCode: pendingRoomCode,
+        playerName: trimmedName,
+        persistentPlayerId: persistentPlayerId,
+        expectedGameType: gameType
+      })
+    }
+  }
+
   const leaveRoom = () => {
     if (!isConnected) return
     sendMessage({ type: 'leaveRoom' })
@@ -283,6 +373,10 @@ export function useOnlineGame(gameType) {
     sendMessage({ type: 'startGame' })
   }
 
+  const clearAutoJoinError = () => {
+    setAutoJoinError(null)
+  }
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -296,6 +390,7 @@ export function useOnlineGame(gameType) {
   return {
     // State
     gamePhase,
+    setGamePhase,
     roomCode,
     setRoomCode,
     playerName,
@@ -306,6 +401,18 @@ export function useOnlineGame(gameType) {
     gameState,
     setGameState,
     
+    // Pending state for separated workflow
+    pendingRoomCode,
+    setPendingRoomCode,
+    pendingIsHost,
+    setPendingIsHost,
+    
+    // URL-based joining
+    urlRoomCode,
+    autoJoinAttempted,
+    autoJoinError,
+    clearAutoJoinError,
+    
     // Connection
     connectionStatus,
     wsError,
@@ -314,6 +421,9 @@ export function useOnlineGame(gameType) {
     // Actions
     createRoom,
     joinRoom,
+    createRoomWithoutName,
+    joinRoomWithoutName,
+    enterNameAndJoinRoom,
     leaveRoom,
     startGame,
     updateGameSettings,

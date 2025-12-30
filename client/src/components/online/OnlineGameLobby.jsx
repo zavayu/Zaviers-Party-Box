@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 function OnlineGameLobby({ 
   roomCode, 
   players, 
@@ -8,9 +10,34 @@ function OnlineGameLobby({
   minPlayers = 3,
   gameTitle = "Game",
   connectionStatus,
-  wsError
+  wsError,
+  gameType = "" // Add gameType prop for generating URLs
 }) {
+  const [copySuccess, setCopySuccess] = useState(false)
+  
   const canStart = players.length >= minPlayers
+
+  // Generate shareable URL
+  const shareableUrl = roomCode ? `${window.location.origin}/online/${gameType}/${roomCode}` : ''
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareableUrl)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy link:', err)
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = shareableUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    }
+  }
 
   // Debug info
   const storedRoomCode = localStorage.getItem('partybox-room-code')
@@ -49,9 +76,36 @@ function OnlineGameLobby({
       </div>
       
       {roomCode && (
-        <p className="text-gray-400 text-center mb-6">
-          Room Code: <span className="text-white font-bold text-xl">{roomCode}</span>
-        </p>
+        <>
+          <p className="text-gray-400 text-center mb-4">
+            Room Code: <span className="text-white font-bold text-xl">{roomCode}</span>
+          </p>
+          
+          {/* Share Link Section */}
+          <div className="bg-gray-700 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-white font-semibold">Share Link</span>
+              <button
+                onClick={handleCopyLink}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  copySuccess 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {copySuccess ? '✓ Copied!' : '📋 Copy Link'}
+              </button>
+            </div>
+            <div className="bg-gray-800 rounded-lg p-3">
+              <p className="text-gray-300 text-sm font-mono break-all">
+                {shareableUrl}
+              </p>
+            </div>
+            <p className="text-gray-500 text-xs mt-2">
+              Share this link with friends to let them join instantly
+            </p>
+          </div>
+        </>
       )}
 
       {/* Game Settings Display - only show if settings are available */}

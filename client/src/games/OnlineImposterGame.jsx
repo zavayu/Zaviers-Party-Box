@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnlineGame } from '../hooks/useOnlineGame'
 import OnlineGameLobby from '../components/online/OnlineGameLobby'
-import RoomManager from '../components/online/RoomManager'
+import CreateJoinRoom from '../components/online/CreateJoinRoom'
+import EnterName from '../components/online/EnterName'
 import GameSettings from '../components/online/GameSettings'
 
 function OnlineImposterGame() {
   const navigate = useNavigate()
   const {
     gamePhase,
+    setGamePhase,
     roomCode,
     setRoomCode,
     playerName,
@@ -23,15 +25,22 @@ function OnlineImposterGame() {
     isConnected,
     createRoom,
     joinRoom,
+    createRoomWithoutName,
+    joinRoomWithoutName,
+    enterNameAndJoinRoom,
     leaveRoom,
     startGame,
     updateGameSettings,
     sendMessage,
     onMessage,
     clearError,
-    
-    // Refs
-    clientIdRef
+    clientIdRef,
+    urlRoomCode,
+    autoJoinAttempted,
+    autoJoinError,
+    clearAutoJoinError,
+    pendingRoomCode,
+    pendingIsHost
   } = useOnlineGame('secret-word')
 
   // Game-specific state
@@ -93,6 +102,23 @@ function OnlineImposterGame() {
 
   const handleJoinRoom = (code, name) => {
     joinRoom(code, name)
+  }
+
+  // New separated workflow actions
+  const handleCreateRoomWithoutName = () => {
+    createRoomWithoutName()
+  }
+
+  const handleJoinRoomWithoutName = (code) => {
+    joinRoomWithoutName(code)
+  }
+
+  const handleEnterName = (name) => {
+    enterNameAndJoinRoom(name)
+  }
+
+  const handleBackToCreateJoin = () => {
+    setGamePhase('createJoinRoom')
   }
 
   const handleStartGame = () => {
@@ -193,14 +219,32 @@ function OnlineImposterGame() {
         </div>
 
         {gamePhase === 'createJoinRoom' && (
-          <RoomManager
+          <CreateJoinRoom
             connectionStatus={connectionStatus}
             wsError={wsError}
-            onCreateRoom={handleCreateRoom}
-            onJoinRoom={handleJoinRoom}
+            onCreateRoom={handleCreateRoomWithoutName}
+            onJoinRoom={handleJoinRoomWithoutName}
             onClearError={clearError}
-            onBack={handleBackToHome}
             gameTitle="Secret Word"
+            initialRoomCode={urlRoomCode}
+            showCreateRoom={!urlRoomCode}
+            autoJoinError={autoJoinError}
+            onClearAutoJoinError={clearAutoJoinError}
+          />
+        )}
+
+        {gamePhase === 'enterName' && (
+          <EnterName
+            connectionStatus={connectionStatus}
+            wsError={wsError}
+            onEnterName={handleEnterName}
+            onBack={handleBackToCreateJoin}
+            onClearError={clearError}
+            gameTitle="Secret Word"
+            roomCode={pendingRoomCode}
+            isCreatingRoom={pendingIsHost}
+            autoJoinError={autoJoinError}
+            onClearAutoJoinError={clearAutoJoinError}
           />
         )}
 
@@ -216,6 +260,7 @@ function OnlineImposterGame() {
             gameTitle="Secret Word"
             connectionStatus={connectionStatus}
             wsError={wsError}
+            gameType="secret-word"
           />
         )}
 

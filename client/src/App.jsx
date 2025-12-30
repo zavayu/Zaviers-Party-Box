@@ -78,7 +78,9 @@ function App() {
       <Route path="/play/word-hunt" element={<GameWrapper GameComponent={WordHuntGame} />} />
       <Route path="/online" element={<OnlineGameSelector />} />
       <Route path="/online/secret-word" element={<OnlineImposterGame />} />
+      <Route path="/online/secret-word/:roomCode" element={<OnlineImposterGame />} />
       <Route path="/online/word-hunt" element={<OnlineWordHuntGame />} />
+      <Route path="/online/word-hunt/:roomCode" element={<OnlineWordHuntGame />} />
     </Routes>
   )
 }

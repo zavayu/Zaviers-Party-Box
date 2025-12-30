@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-function RoomManager({ 
+function CreateJoinRoom({ 
   connectionStatus, 
   wsError, 
   onCreateRoom, 
@@ -13,7 +13,6 @@ function RoomManager({
   onClearAutoJoinError = null
 }) {
   const [roomCode, setRoomCode] = useState(initialRoomCode)
-  const [playerName, setPlayerName] = useState('')
 
   // Update room code if initialRoomCode changes (from URL)
   useEffect(() => {
@@ -25,13 +24,13 @@ function RoomManager({
   const isConnected = connectionStatus === 'connected'
 
   const handleCreateRoom = () => {
-    if (!isConnected || !playerName.trim()) return
-    onCreateRoom(playerName.trim())
+    if (!isConnected) return
+    onCreateRoom()
   }
 
   const handleJoinRoom = () => {
-    if (!isConnected || !roomCode.trim() || !playerName.trim()) return
-    onJoinRoom(roomCode.trim().toUpperCase(), playerName.trim())
+    if (!isConnected || !roomCode.trim()) return
+    onJoinRoom(roomCode.trim().toUpperCase())
   }
 
   return (
@@ -82,26 +81,12 @@ function RoomManager({
         </div>
       )}
 
-      <div className="space-y-4 mb-6">
-        <div>
-          <label className="block text-gray-300 text-sm mb-2">Your Name</label>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter your name"
-            className="w-full bg-gray-700 text-white px-4 py-3 rounded-xl border border-gray-600 focus:outline-none focus:border-blue-500"
-            autoFocus={!!initialRoomCode} // Auto-focus name input if room code is pre-filled
-          />
-        </div>
-      </div>
-
       <div className="space-y-4">
         {showCreateRoom && !initialRoomCode && (
           <>
             <button
               onClick={handleCreateRoom}
-              disabled={!isConnected || !playerName.trim()}
+              disabled={!isConnected}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
             >
               Create Room
@@ -131,11 +116,12 @@ function RoomManager({
               className="w-full bg-gray-700 text-white px-4 py-3 rounded-xl border border-gray-600 focus:outline-none focus:border-blue-500 uppercase"
               maxLength={6}
               readOnly={!!initialRoomCode} // Make read-only if from URL
+              autoFocus={!!initialRoomCode} // Auto-focus room code input if from URL
             />
           </div>
           <button
             onClick={handleJoinRoom}
-            disabled={!isConnected || !roomCode.trim() || !playerName.trim()}
+            disabled={!isConnected || !roomCode.trim()}
             className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
           >
             Join Room
@@ -146,4 +132,4 @@ function RoomManager({
   )
 }
 
-export default RoomManager
+export default CreateJoinRoom
