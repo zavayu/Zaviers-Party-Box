@@ -2,8 +2,8 @@ import { Link, useNavigate } from 'react-router-dom'
 
 const GAMES = [
   {
-    id: 'secret-word',
-    name: 'Secret Word',
+    id: 'imposter',
+    name: 'Imposter',
     emoji: '🕵️',
     blurb: 'One player is the imposter. Find out who!',
   },

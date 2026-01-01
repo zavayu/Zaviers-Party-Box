@@ -2,13 +2,13 @@ import { useNavigate } from 'react-router-dom'
 
 const ONLINE_GAMES = [
   {
-    id: 'secret-word',
-    name: 'Secret Word',
+    id: 'imposter',
+    name: 'Imposter',
     emoji: '🕵️',
     description: 'One player is the imposter. Find out who!',
     minPlayers: 3,
     maxPlayers: 10,
-    route: '/online/secret-word'
+    route: '/online/imposter'
   },
   {
     id: 'word-hunt',

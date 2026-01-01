@@ -86,20 +86,53 @@ function ImposterGame({ onBack }) {
     setIsRevealed(false)
   }
 
+  const handleBack = () => {
+    switch (gamePhase) {
+      case 'home':
+        if (onBack) onBack()
+        break
+      case 'categorySelect':
+        setGamePhase('home')
+        break
+      case 'playerCount':
+        setGamePhase('categorySelect')
+        break
+      case 'imposterCount':
+        setGamePhase('playerCount')
+        break
+      case 'confirm':
+        setGamePhase('imposterCount')
+        break
+      case 'playerReveal':
+      case 'discussion':
+      case 'results':
+        // Once game has started, go back to home
+        setGamePhase('home')
+        setCategory('')
+        setPlayerCount(3)
+        setImposterCount(1)
+        setImposterIndices([])
+        setSecretWord('')
+        setCurrentPlayerIndex(0)
+        setIsRevealed(false)
+        break
+      default:
+        break
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {onBack && (
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={onBack}
-              className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
-            >
-              ← Games
-            </button>
-            <span className="text-gray-400 text-sm">Imposter</span>
-          </div>
-        )}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={handleBack}
+            className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
+          >
+            ← {gamePhase === 'home' ? 'Games' : gamePhase === 'playerReveal' || gamePhase === 'discussion' || gamePhase === 'results' ? 'Start' : 'Back'}
+          </button>
+          <span className="text-gray-400 text-sm">Imposter</span>
+        </div>
 
         {/* HOME SCREEN */}
         {gamePhase === 'home' && (
@@ -121,7 +154,7 @@ function ImposterGame({ onBack }) {
         {/* CATEGORY SELECT */}
         {gamePhase === 'categorySelect' && (
           <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-3xl font-bold text-white mb-4 text-center sticky top-0 bg-gray-800 pb-2">
+            <h2 className="text-3xl font-bold text-white mb-4 text-center bg-gray-800 pb-2">
               Choose Category
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -132,7 +165,7 @@ function ImposterGame({ onBack }) {
                   className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-semibold py-6 px-4 rounded-xl text-base transition-colors min-h-[80px] flex flex-col items-center justify-center text-center gap-2"
                 >
                   <span className="text-3xl">{GAME_DATA[cat].emoji}</span>
-                  <span>{cat}</span>
+                  <span>{cat.replace(/_/g, ' ')}</span>
                 </button>
               ))}
             </div>

@@ -72,13 +72,13 @@ function App() {
     <Routes>
       <Route path="/" element={<ModeSelection />} />
       <Route path="/play" element={<PassAndPlayHome />} />
-      <Route path="/play/secret-word" element={<GameWrapper GameComponent={ImposterGame} />} />
+      <Route path="/play/imposter" element={<GameWrapper GameComponent={ImposterGame} />} />
       <Route path="/play/wrong-answer" element={<GameWrapper GameComponent={OutlierGame} />} />
       <Route path="/play/wordle" element={<GameWrapper GameComponent={WordleGame} />} />
       <Route path="/play/word-hunt" element={<GameWrapper GameComponent={WordHuntGame} />} />
       <Route path="/online" element={<OnlineGameSelector />} />
-      <Route path="/online/secret-word" element={<OnlineImposterGame />} />
-      <Route path="/online/secret-word/:roomCode" element={<OnlineImposterGame />} />
+      <Route path="/online/imposter" element={<OnlineImposterGame />} />
+      <Route path="/online/imposter/:roomCode" element={<OnlineImposterGame />} />
       <Route path="/online/word-hunt" element={<OnlineWordHuntGame />} />
       <Route path="/online/word-hunt/:roomCode" element={<OnlineWordHuntGame />} />
     </Routes>
