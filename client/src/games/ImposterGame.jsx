@@ -12,6 +12,8 @@ function ImposterGame({ onBack }) {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
 
+  const displayCategory = category.replace(/_/g, ' ')
+
   // Start new game from home
   const handleStartGame = () => {
     setGamePhase('categorySelect')
@@ -359,6 +361,12 @@ function ImposterGame({ onBack }) {
                     ? 'bg-red-900'
                     : 'bg-green-900'
                 }`}>
+                  <p className="text-sm uppercase tracking-wide text-gray-200 mb-2">
+                    Category
+                  </p>
+                  <p className="text-xl font-semibold text-white mb-4">
+                    {displayCategory}
+                  </p>
                   {imposterIndices.includes(currentPlayerIndex) ? (
                     <>
                       <p className="text-6xl mb-4">🎭</p>

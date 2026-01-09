@@ -312,7 +312,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
       })
 
       // Send individual player roles (only for games that have roles)
-      if (room.gameType === 'secret-word') {
+      if (room.gameType === 'imposter') {
         room.players.forEach((player, playerId) => {
           const playerGameState = gameInstance.getPlayerGameState(playerId)
           sendMessage(playerId, {

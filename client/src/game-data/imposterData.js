@@ -62,7 +62,9 @@ export const GAME_DATA = {
       'Skiing', 'Snowboarding', 'Skateboarding', 'Surfing', 'Diving',
       'Gymnastics', 'Track', 'Marathon', 'Cycling', 'Archery', 'Fencing',
       'Bowling', 'Darts', 'Pool', 'Lacrosse', 'Polo', 'Rowing',
-      'Sailing', 'Rock Climbing', 'Yoga', 'Pilates', 'CrossFit'
+      'Sailing', 'Rock Climbing', 'Yoga', 'Pilates', 'CrossFit', 'Triathlon',
+      'Weightlifting', 'Figure Skating', 'Sledding', 'Handball', 'Water Polo',
+      'NASCAR', 'Drag Racing'
     ]
   },
 
@@ -114,11 +116,20 @@ export const GAME_DATA = {
     words: [
       'USA', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Chile',
       'UK', 'France', 'Germany', 'Italy', 'Spain', 'Portugal',
+      'Netherlands', 'Belgium', 'Switzerland', 'Sweden', 'Norway', 'Finland',
+      'Denmark', 'Ireland', 'Poland', 'Czech Republic', 'Austria', 'Hungary',
+      'Russia', 'China', 'Japan', 'South Korea', 'India', 'Australia',
+      'New Zealand', 'South Africa', 'Egypt', 'Turkey', 'Greece',
       'Russia', 'China', 'Japan', 'South Korea', 'India', 'Thailand',
       'Australia', 'New Zealand', 'Egypt', 'South Africa', 'Kenya',
       'Greece', 'Turkey', 'Poland', 'Sweden', 'Norway', 'Denmark',
       'Netherlands', 'Belgium', 'Switzerland', 'Austria', 'Ireland',
-      'Vietnam', 'Indonesia', 'Philippines', 'Malaysia', 'Singapore'
+      'Vietnam', 'Indonesia', 'Philippines', 'Malaysia', 'Singapore',
+      'Saudi Arabia', 'UAE', 'Israel', 'Iran', 'Iraq', 'Pakistan',
+      'Bangladesh', 'Sri Lanka', 'Nepal', 'Bhutan', 'Maldives',
+      'Cuba', 'Jamaica', 'Dominican Republic', 'Colombia', 'Peru',
+      'Venezuela', 'Uruguay', 'Paraguay', 'Ecuador', 'Bolivia', 'Guatemala',
+      'Honduras', 'El Salvador', 'Nicaragua', 'Costa Rica', 'Panama'
     ]
   },
 
@@ -247,6 +258,32 @@ export const GAME_DATA = {
       'Sailor Moon', 'Cardcaptor Sakura', 'Inuyasha', 'Yu Yu Hakusho', 'Hunter x Hunter', 'Fairy Tail',
       'Tokyo Ghoul', 'Blue Exorcist', 'Black Clover', 'One Punch Man', 'Mob Psycho 100', 'Gintama',
       'Neon Genesis Evangelion', 'Steins;Gate', 'Your Name', 'Weathering With You', 'Princess Mononoke', 'Spirited Away'
+    ]
+  },
+
+  Clash_Royale: {
+    emoji: '🛡️',
+    words: [
+      'Knight', 'Archer', 'Giant', 'Goblin', 'Wizard', 'P.E.K.K.A',
+      'Valkyrie', 'Hog Rider', 'Minion', 'Baby Dragon', 'Skeletons', 'Cannon',
+      'Tesla', 'Inferno Tower', 'Fireball', 'Zap', 'Lightning', 'Rocket',
+      'Goblin Barrel', 'Princess', 'Ice Wizard', 'Lumberjack', 'Miner',
+      'Mega Minion', 'Electro Wizard', 'Bandit', 'Night Witch', 'Royal Giant',
+      'Graveyard', 'Tornado', 'Elixir Collector', 'Battle Ram', 'Dark Prince',
+      'Three Musketeers', 'Ice Golem', 'Magic Archer', 'Ram Rider', 'Fisherman'
+    ]
+  },
+
+  TV_Shows: {
+    emoji: '📺',
+    words: [
+      'Friends', 'The Office', 'Breaking Bad', 'Game of Thrones', 'Stranger Things', 'The Mandalorian',
+      'The Simpsons', 'Rick and Morty', 'The Crown', 'Sherlock', 'Westworld',
+      'The Witcher', 'Better Call Saul', 'Black Mirror', 'The Big Bang Theory',
+      'How I Met Your Mother', 'Grey\'s Anatomy', 'House of Cards', 'Narcos',
+      'Peaky Blinders', 'The Walking Dead', 'Vikings', 'Suits', 'Mindhunter',
+      'Ozark', 'Fargo', 'The Handmaid\'s Tale', 'Lost', 'Dexter', 'Homeland',
+      'True Detective', 'Chernobyl'
     ]
   }
 }

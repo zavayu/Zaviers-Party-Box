@@ -1,7 +1,7 @@
 // Game registry for managing different online game types
 
 export const GAME_TYPES = {
-  SECRET_WORD: 'secret-word',
+  SECRET_WORD: 'imposter',
   WRONG_ANSWER: 'wrong-answer',
   WORDLE: 'wordle',
   WORD_HUNT: 'word-hunt'

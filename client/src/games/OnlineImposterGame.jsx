@@ -41,7 +41,7 @@ function OnlineImposterGame() {
     clearAutoJoinError,
     pendingRoomCode,
     pendingIsHost
-  } = useOnlineGame('secret-word')
+  } = useOnlineGame('imposter')
 
   // Game-specific state
   const [isImposter, setIsImposter] = useState(false)
@@ -91,7 +91,7 @@ function OnlineImposterGame() {
   }, [isConnected, onMessage])
 
   const handleGameSelect = (gameId) => {
-    if (gameId === 'secret-word') {
+    if (gameId === 'imposter') {
       // Game selection is now handled by routing
     }
   }
@@ -260,7 +260,7 @@ function OnlineImposterGame() {
             gameTitle="Secret Word"
             connectionStatus={connectionStatus}
             wsError={wsError}
-            gameType="secret-word"
+            gameType="imposter"
           />
         )}
 
