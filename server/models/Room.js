@@ -103,6 +103,12 @@ export class Room {
       gameState: this.gameState
     }
 
+    if (this.gameType === 'imposter' && this.gamePhase !== 'results') {
+      roomState.gameState = { ...this.gameState }
+      delete roomState.gameState.secretWord
+      delete roomState.gameState.imposters
+    }
+
     // If there's a game instance, include computed scores
     if (this.gameInstance && this.gameInstance.getAllPlayerScores) {
       roomState.gameState = {

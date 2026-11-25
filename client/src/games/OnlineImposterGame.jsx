@@ -4,6 +4,7 @@ import { useOnlineGame } from '../hooks/useOnlineGame'
 import OnlineGameLobby from '../components/online/OnlineGameLobby'
 import CreateJoinRoom from '../components/online/CreateJoinRoom'
 import EnterName from '../components/online/EnterName'
+import ImposterRoleCard from '../components/ImposterRoleCard'
 import GameSettings from '../components/online/GameSettings'
 
 function OnlineImposterGame() {
@@ -44,7 +45,7 @@ function OnlineImposterGame() {
   } = useOnlineGame('imposter')
 
   // Game-specific state
-  const [isImposter, setIsImposter] = useState(false)
+  const [isImposter, setIsImposter] = useState(null)
   const [secretWord, setSecretWord] = useState('')
   const [votedPlayer, setVotedPlayer] = useState('')
   const [votes, setVotes] = useState({})
@@ -66,9 +67,7 @@ function OnlineImposterGame() {
 
     const cleanupPlayerRole = onMessage('playerRole', (message) => {
       setIsImposter(message.isImposter)
-      if (message.secretWord) {
-        setSecretWord(message.secretWord)
-      }
+      setSecretWord(message.secretWord ?? '')
     })
 
     const cleanupGameStateUpdate = onMessage('gameStateUpdate', (message) => {
@@ -77,7 +76,7 @@ function OnlineImposterGame() {
       }
       // Reset local game state when returning to lobby
       if (message.roomState.gamePhase === 'lobby') {
-        setIsImposter(false)
+        setIsImposter(null)
         setSecretWord('')
         setVotedPlayer('')
         setChatInput('')
@@ -198,7 +197,7 @@ function OnlineImposterGame() {
     leaveRoom()
     navigate('/online')
     // Reset game-specific state
-    setIsImposter(false)
+    setIsImposter(null)
     setSecretWord('')
     setVotedPlayer('')
     setVotes({})
@@ -270,34 +269,11 @@ function OnlineImposterGame() {
               Your Role
             </h2>
 
-            <div className={`rounded-xl p-8 mb-8 text-center ${
-              isImposter ? 'bg-red-900' : 'bg-green-900'
-            }`}>
-              {isImposter ? (
-                <>
-                  <p className="text-6xl mb-4">🎭</p>
-                  <p className="text-3xl font-bold text-white mb-4">
-                    You are the Imposter!
-                  </p>
-                  <p className="text-red-200">
-                    Pretend you know the secret word. Try not to get caught!
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-6xl mb-4">✓</p>
-                  <p className="text-2xl text-green-200 mb-4">
-                    The secret word is:
-                  </p>
-                  <p className="text-4xl font-bold text-white mb-4">
-                    {secretWord || gameState.secretWord || ''}
-                  </p>
-                  <p className="text-green-200">
-                    Find the imposter who doesn't know this word!
-                  </p>
-                </>
-              )}
-            </div>
+            <ImposterRoleCard
+              category={gameState.category}
+              isImposter={isImposter}
+              secretWord={secretWord}
+            />
 
             {isHost && (
               <button
