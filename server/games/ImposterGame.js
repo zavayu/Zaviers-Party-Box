@@ -11,7 +11,11 @@ const GAME_DATA = {
       'Gorilla', 'Chimpanzee', 'Orangutan', 'Zebra', 'Rhino', 'Hippo',
       'Crocodile', 'Alligator', 'Snake', 'Lizard', 'Turtle', 'Frog',
       'Koala', 'Panda', 'Sloth', 'Cheetah', 'Leopard', 'Jaguar',
-      'Deer', 'Moose', 'Buffalo', 'Camel', 'Llama', 'Alpaca'
+      'Deer', 'Moose', 'Buffalo', 'Camel', 'Llama', 'Alpaca',
+      'Axolotl', 'Capybara', 'Meerkat', 'Wombat', 'Narwhal', 'Red Panda',
+      'Komodo Dragon', 'Pangolin', 'Armadillo', 'Fennec Fox', 'Manatee', 'Puffin',
+      'Quokka', 'Okapi', 'Binturong', 'Tapir', 'Aardvark', 'Ibex',
+      'Emu', 'Cassowary', 'Shoebill', 'Orca', 'Beluga', 'Blue Jay'
     ]
   },
   Food: {
@@ -24,7 +28,11 @@ const GAME_DATA = {
       'Pancakes', 'Waffles', 'French Toast', 'Omelette', 'Bacon',
       'Hot Dog', 'Pretzel', 'Popcorn', 'Ice Cream', 'Cake', 'Cookie',
       'Brownie', 'Donut', 'Muffin', 'Croissant', 'Bagel', 'Toast',
-      'Chips', 'Fries', 'Onion Rings', 'Wings', 'Ribs', 'BBQ'
+      'Chips', 'Fries', 'Onion Rings', 'Wings', 'Ribs', 'BBQ',
+      'Falafel', 'Gnocchi', 'Bibimbap', 'Shawarma', 'Empanada', 'Pierogi',
+      'Tamale', 'Samosa', 'Corn Dog', 'Gumbo', 'Churro', 'Tiramisu',
+      'Baklava', 'Paella', 'Poutine', 'Moussaka', 'Bruschetta', 'Onigiri',
+      'Arepa', 'Shakshuka', 'Ceviche', 'Beignets', 'Gelato', 'Risotto'
     ]
   },
   Movies: {
@@ -38,7 +46,9 @@ const GAME_DATA = {
       'Black Panther', 'Wonder Woman', 'Joker', 'Toy Story', 'Finding Nemo',
       'Up', 'Wall-E', 'Ratatouille', 'Moana', 'Coco', 'Tangled',
       'The Lion King', 'Aladdin', 'Beauty and the Beast', 'Mulan',
-      'Pocahontas', 'Hercules', 'Tarzan', 'Bambi', 'Dumbo'
+      'Pocahontas', 'Hercules', 'Tarzan', 'Bambi', 'Dumbo',
+      'Knives Out', 'The Truman Show', 'Groundhog Day', 'Back to the Future', 'Home Alone', 'Mean Girls',
+      'The Princess Bride', 'The Incredibles', 'Coraline', 'Interstellar', 'The Lego Movie', 'School of Rock'
     ]
   },
   Sports: {
@@ -50,7 +60,11 @@ const GAME_DATA = {
       'Skiing', 'Snowboarding', 'Skateboarding', 'Surfing', 'Diving',
       'Gymnastics', 'Track', 'Marathon', 'Cycling', 'Archery', 'Fencing',
       'Bowling', 'Darts', 'Pool', 'Lacrosse', 'Polo', 'Rowing',
-      'Sailing', 'Rock Climbing', 'Yoga', 'Pilates', 'CrossFit'
+      'Sailing', 'Rock Climbing', 'Yoga', 'Pilates', 'CrossFit',
+      'Pickleball', 'Padel', 'Curling', 'Bobsled', 'Futsal', 'Dodgeball',
+      'Ultimate Frisbee', 'Disc Golf', 'Sepak Takraw', 'Speed Skating', 'Softball', 'Kayaking',
+      'Netball', 'Rounders', 'Luge', 'Skeleton', 'Biathlon', 'Bandy',
+      'Lawn Bowls', 'Sumo', 'Mixed Martial Arts', 'Mountain Biking', 'Artistic Swimming', 'Trampoline Gymnastics'
     ]
   },
   Professions: {
@@ -63,7 +77,9 @@ const GAME_DATA = {
       'Farmer', 'Fisherman', 'Carpenter', 'Plumber', 'Electrician',
       'Mechanic', 'Barber', 'Stylist', 'Veterinarian', 'Zookeeper',
       'Librarian', 'Accountant', 'Banker', 'Cashier', 'Waiter', 'Bartender',
-      'Baker', 'Butcher', 'Tailor', 'Soldier', 'Sailor', 'Marine'
+      'Baker', 'Butcher', 'Tailor', 'Soldier', 'Sailor', 'Marine',
+      'Paramedic', 'Optometrist', 'Court Reporter', 'Park Ranger', 'Crossing Guard', 'Translator',
+      'Voice Actor', 'Florist', 'Jeweler', 'Locksmith', 'Flight Attendant', 'Archaeologist'
     ]
   },
   Countries: {
@@ -75,7 +91,9 @@ const GAME_DATA = {
       'Australia', 'New Zealand', 'Egypt', 'South Africa', 'Kenya',
       'Greece', 'Turkey', 'Poland', 'Sweden', 'Norway', 'Denmark',
       'Netherlands', 'Belgium', 'Switzerland', 'Austria', 'Ireland',
-      'Vietnam', 'Indonesia', 'Philippines', 'Malaysia', 'Singapore'
+      'Vietnam', 'Indonesia', 'Philippines', 'Malaysia', 'Singapore',
+      'Morocco', 'Ghana', 'Nigeria', 'Ethiopia', 'Tanzania', 'Senegal',
+      'Ukraine', 'Romania', 'Iceland', 'Croatia', 'Slovakia', 'Latvia'
     ]
   },
   Cities: {
@@ -87,7 +105,9 @@ const GAME_DATA = {
       'Dubai', 'Sydney', 'Melbourne', 'Toronto', 'Vancouver', 'Montreal',
       'Amsterdam', 'Vienna', 'Prague', 'Budapest', 'Athens', 'Istanbul',
       'Moscow', 'Stockholm', 'Copenhagen', 'Oslo', 'Helsinki', 'Dublin',
-      'Lisbon', 'Bangkok', 'Mumbai', 'Delhi', 'Rio', 'Buenos Aires'
+      'Lisbon', 'Bangkok', 'Mumbai', 'Delhi', 'Rio', 'Buenos Aires',
+      'Seattle', 'Las Vegas', 'New Orleans', 'Philadelphia', 'San Diego', 'Brussels',
+      'Edinburgh', 'Warsaw', 'Cairo', 'Cape Town', 'Nairobi', 'Osaka'
     ]
   },
   Brands: {
@@ -99,7 +119,9 @@ const GAME_DATA = {
       'Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes', 'Tesla',
       'Sony', 'Nintendo', 'PlayStation', 'Xbox', 'Disney', 'Netflix',
       'Spotify', 'YouTube', 'Instagram', 'Twitter', 'TikTok',
-      'IKEA', 'Lego', 'Barbie', 'Hot Wheels', 'Marvel', 'DC Comics'
+      'IKEA', 'Lego', 'Barbie', 'Hot Wheels', 'Marvel', 'DC Comics',
+      'Patagonia', 'The North Face', 'Converse', 'Vans', 'Crocs', 'Duolingo',
+      'Adobe', 'Canon', 'Fujifilm', 'Dyson', 'Red Bull', 'Doritos'
     ]
   },
   Instruments: {
@@ -109,7 +131,9 @@ const GAME_DATA = {
       'Flute', 'Clarinet', 'Saxophone', 'Trumpet', 'Trombone', 'Tuba',
       'Harmonica', 'Accordion', 'Banjo', 'Ukulele', 'Mandolin', 'Harp',
       'Xylophone', 'Marimba', 'Tambourine', 'Bongos', 'Cymbals',
-      'Keyboard', 'Synthesizer', 'Organ', 'Bagpipes', 'Oboe', 'Bassoon'
+      'Keyboard', 'Synthesizer', 'Organ', 'Bagpipes', 'Oboe', 'Bassoon',
+      'French Horn', 'Recorder', 'Triangle', 'Cowbell', 'Timpani', 'Didgeridoo',
+      'Sitar', 'Steelpan', 'Ocarina', 'Gong', 'Kalimba', 'Djembe'
     ]
   },
   Colors: {
@@ -119,7 +143,9 @@ const GAME_DATA = {
       'Pink', 'Brown', 'Black', 'White', 'Gray', 'Silver',
       'Gold', 'Beige', 'Tan', 'Navy', 'Turquoise', 'Teal',
       'Cyan', 'Magenta', 'Lime', 'Olive', 'Maroon', 'Crimson',
-      'Scarlet', 'Indigo', 'Violet', 'Lavender', 'Coral', 'Salmon'
+      'Scarlet', 'Indigo', 'Violet', 'Lavender', 'Coral', 'Salmon',
+      'Mint', 'Peach', 'Mauve', 'Plum', 'Mustard', 'Chartreuse',
+      'Sage', 'Burgundy', 'Fuchsia', 'Copper', 'Cream', 'Periwinkle'
     ]
   },
   Vehicles: {
@@ -130,7 +156,9 @@ const GAME_DATA = {
       'Boat', 'Ship', 'Yacht', 'Submarine', 'Rocket', 'Spaceship',
       'Tank', 'Ambulance', 'Fire Truck', 'Police Car', 'Taxi',
       'Van', 'SUV', 'Sedan', 'Coupe', 'Convertible', 'Limousine',
-      'Tractor', 'Bulldozer', 'Crane', 'Forklift', 'Golf Cart'
+      'Tractor', 'Bulldozer', 'Crane', 'Forklift', 'Golf Cart',
+      'Ferry', 'Hovercraft', 'Hot Air Balloon', 'Glider', 'Trolleybus', 'Monorail',
+      'Rickshaw', 'Tuk-Tuk', 'Snowmobile', 'Zamboni', 'Dump Truck', 'Double-Decker Bus'
     ]
   },
   Furniture: {
@@ -140,7 +168,9 @@ const GAME_DATA = {
       'Bookshelf', 'Cabinet', 'Wardrobe', 'Nightstand', 'Ottoman',
       'Bench', 'Stool', 'Armchair', 'Recliner', 'Couch', 'Loveseat',
       'Coffee Table', 'Dining Table', 'End Table', 'Lamp', 'Mirror',
-      'Rug', 'Curtain', 'Mattress', 'Pillow', 'Blanket', 'Drawer'
+      'Rug', 'Curtain', 'Mattress', 'Pillow', 'Blanket', 'Drawer',
+      'Futon', 'Beanbag Chair', 'Bunk Bed', 'Murphy Bed', 'Chaise Lounge', 'Rocking Chair',
+      'Bar Stool', 'Credenza', 'Vanity', 'Piano Bench', 'Room Divider', 'High Chair'
     ]
   },
   Technology: {
@@ -151,7 +181,9 @@ const GAME_DATA = {
       'Headphones', 'Speaker', 'Microphone', 'Router', 'Modem',
       'USB Drive', 'Hard Drive', 'SSD', 'RAM', 'CPU', 'GPU',
       'Drone', 'Robot', 'VR Headset', 'TV', 'Remote', 'Console',
-      'Charger', 'Battery', 'Cable', 'Bluetooth', 'WiFi', 'GPS'
+      'Charger', 'Battery', 'Cable', 'Bluetooth', 'WiFi', 'GPS',
+      'E-Reader', 'Projector', 'Webcam', 'Trackpad', 'Graphics Tablet', 'Smart Doorbell',
+      'Robot Vacuum', '3D Printer', 'Dashcam', 'Action Camera', 'Barcode Scanner', 'Digital Photo Frame'
     ]
   },
   Clothing: {
@@ -162,7 +194,9 @@ const GAME_DATA = {
       'Suit', 'Tie', 'Scarf', 'Hat', 'Cap', 'Beanie', 'Gloves',
       'Socks', 'Shoes', 'Boots', 'Sneakers', 'Sandals', 'Heels',
       'Belt', 'Vest', 'Tank Top', 'Polo Shirt', 'Blouse', 'Leggings',
-      'Swimsuit', 'Bikini', 'Underwear', 'Pajamas', 'Robe', 'Kimono'
+      'Swimsuit', 'Bikini', 'Underwear', 'Pajamas', 'Robe', 'Kimono',
+      'Overalls', 'Trench Coat', 'Poncho', 'Tracksuit', 'Jumpsuit', 'Tuxedo',
+      'Cape', 'Beret', 'Mittens', 'Slippers', 'Loafers', 'Apron'
     ]
   },
   Weather: {
@@ -171,7 +205,9 @@ const GAME_DATA = {
       'Sunny', 'Cloudy', 'Rainy', 'Snowy', 'Foggy', 'Windy',
       'Stormy', 'Thunder', 'Lightning', 'Hail', 'Sleet', 'Drizzle',
       'Hurricane', 'Tornado', 'Blizzard', 'Monsoon', 'Rainbow',
-      'Hot', 'Cold', 'Warm', 'Cool', 'Humid', 'Dry', 'Frost'
+      'Hot', 'Cold', 'Warm', 'Cool', 'Humid', 'Dry', 'Frost',
+      'Heat Wave', 'Cold Front', 'Dust Storm', 'Freezing Rain', 'Wind Chill', 'Flash Flood',
+      'Dew', 'Sun Shower', 'Waterspout', 'Whiteout', 'Thundercloud', 'Ice Storm'
     ]
   },
   School: {
@@ -181,7 +217,9 @@ const GAME_DATA = {
       'Music', 'PE', 'Biology', 'Chemistry', 'Physics', 'Literature',
       'Writing', 'Reading', 'Spelling', 'Grammar', 'Algebra', 'Geometry',
       'Calculus', 'Economics', 'Psychology', 'Sociology', 'Philosophy',
-      'Drama', 'Theater', 'Dance', 'Computer Science', 'Languages'
+      'Drama', 'Theater', 'Dance', 'Computer Science', 'Languages',
+      'Statistics', 'Astronomy', 'Robotics', 'Journalism', 'Civics', 'Health',
+      'Environmental Science', 'Creative Writing', 'Public Speaking', 'Photography', 'Accounting', 'Woodshop'
     ]
   },
   Superheroes: {
@@ -192,7 +230,9 @@ const GAME_DATA = {
       'Flash', 'Aquaman', 'Green Lantern', 'Cyborg', 'Black Panther',
       'Doctor Strange', 'Scarlet Witch', 'Vision', 'Ant-Man', 'Wasp',
       'Deadpool', 'Wolverine', 'Storm', 'Cyclops', 'Jean Grey',
-      'Captain Marvel', 'Star-Lord', 'Gamora', 'Rocket', 'Groot'
+      'Captain Marvel', 'Star-Lord', 'Gamora', 'Rocket', 'Groot',
+      'Ms. Marvel', 'Blue Beetle', 'Static', 'Beast Boy', 'Starfire', 'Raven',
+      'She-Hulk', 'Moon Knight', 'Shang-Chi', 'The Tick', 'Invincible', 'Hellboy'
     ]
   },
   Body: {
@@ -202,7 +242,9 @@ const GAME_DATA = {
       'Tongue', 'Neck', 'Shoulders', 'Arms', 'Elbows', 'Wrists',
       'Hands', 'Fingers', 'Chest', 'Heart', 'Lungs', 'Stomach',
       'Back', 'Spine', 'Hips', 'Legs', 'Knees', 'Ankles', 'Feet',
-      'Toes', 'Skin', 'Hair', 'Nails', 'Blood', 'Bones', 'Muscles'
+      'Toes', 'Skin', 'Hair', 'Nails', 'Blood', 'Bones', 'Muscles',
+      'Eyebrows', 'Eyelashes', 'Lips', 'Cheeks', 'Chin', 'Philtrum',
+      'Uvula', 'Retina', 'Eardrum', 'Tendons', 'Ligaments', 'Cartilage'
     ]
   },
   Hobbies: {
@@ -213,7 +255,9 @@ const GAME_DATA = {
       'Gaming', 'Collecting', 'Knitting', 'Sewing', 'Crafting',
       'Dancing', 'Singing', 'Playing Music', 'Watching Movies',
       'Bird Watching', 'Traveling', 'Blogging', 'Vlogging', 'Podcasting',
-      'Woodworking', 'Pottery', 'Origami', 'Puzzles', 'Board Games'
+      'Woodworking', 'Pottery', 'Origami', 'Puzzles', 'Board Games',
+      'Calligraphy', 'Candle Making', 'Rock Tumbling', 'Geocaching', 'Model Building', 'Stargazing',
+      'Scrapbooking', 'Soap Making', 'Flower Arranging', 'Letterboxing', 'Thrifting', 'Magic Tricks'
     ]
   },
   VideoGames: {
@@ -225,7 +269,9 @@ const GAME_DATA = {
       'Stardew Valley', 'Animal Crossing', 'Pokemon', 'Final Fantasy', 'Kingdom Hearts', 'Persona',
       'Street Fighter', 'Tekken', 'Mortal Kombat', 'Smash Bros', 'Rocket League', 'FIFA',
       'NBA 2K', 'Madden', 'The Sims', 'SimCity', 'Civilization', 'Age of Empires',
-      'Portal', 'Half-Life', 'Bioshock', 'Mass Effect', 'Dragon Age', 'Skyrim'
+      'Portal', 'Half-Life', 'Bioshock', 'Mass Effect', 'Dragon Age', 'Skyrim',
+      'Hades', 'Hollow Knight', 'Celeste', 'Cuphead', 'Among Us', 'It Takes Two',
+      'Untitled Goose Game', 'Disco Elysium', 'Subnautica', 'Slime Rancher', 'Outer Wilds', 'Beat Saber'
     ]
   },
   Animes: {
@@ -236,7 +282,9 @@ const GAME_DATA = {
       'Spy x Family', 'Chainsaw Man', 'Haikyuu', 'Kuroko no Basket', 'Slam Dunk', 'Yuri on Ice',
       'Sailor Moon', 'Cardcaptor Sakura', 'Inuyasha', 'Yu Yu Hakusho', 'Hunter x Hunter', 'Fairy Tail',
       'Tokyo Ghoul', 'Blue Exorcist', 'Black Clover', 'One Punch Man', 'Mob Psycho 100', 'Gintama',
-      'Neon Genesis Evangelion', 'Steins;Gate', 'Your Name', 'Weathering With You', 'Princess Mononoke', 'Spirited Away'
+      'Neon Genesis Evangelion', 'Steins;Gate', 'Your Name', 'Weathering With You', 'Princess Mononoke', 'Spirited Away',
+      'Frieren', 'Delicious in Dungeon', 'The Apothecary Diaries', 'Vinland Saga', 'Promised Neverland', 'Blue Lock',
+      'Trigun', 'Akira', 'Ghost in the Shell', 'Monster', 'Samurai Pizza Cats', 'Bocchi the Rock!'
     ]
   },
   Nature: {
@@ -246,7 +294,54 @@ const GAME_DATA = {
       'Desert', 'Jungle', 'Waterfall', 'Cave', 'Valley', 'Hill',
       'Volcano', 'Island', 'Cliff', 'Canyon', 'Meadow', 'Field',
       'Pond', 'Stream', 'Glacier', 'Iceberg', 'Reef', 'Swamp',
-      'Tree', 'Flower', 'Grass', 'Rock', 'Stone', 'Sand', 'Soil'
+      'Tree', 'Flower', 'Grass', 'Rock', 'Stone', 'Sand', 'Soil',
+      'Sand Dune', 'Geyser', 'Hot Spring', 'Fjord', 'Mangrove', 'Bog',
+      'Estuary', 'Delta', 'Tide Pool', 'Redwood Grove', 'Salt Flat', 'Lagoon'
+    ]
+  },
+
+  'Board Games': {
+    emoji: '🎲',
+    words: [
+      'Chess', 'Checkers', 'Monopoly', 'Scrabble', 'Clue', 'Risk',
+      'Catan', 'Ticket to Ride', 'Battleship', 'Connect Four', 'Sorry!', 'Guess Who?',
+      'Twister', 'Mouse Trap', 'Operation', 'Pictionary', 'Jenga', 'Backgammon'
+    ]
+  },
+
+  'School Supplies': {
+    emoji: '✏️',
+    words: [
+      'Pencil', 'Eraser', 'Ruler', 'Highlighter', 'Stapler', 'Glue Stick',
+      'Scissors', 'Notebook', 'Binder', 'Index Cards', 'Calculator', 'Compass',
+      'Protractor', 'Crayons', 'Markers', 'Pencil Sharpener', 'Graph Paper', 'Backpack'
+    ]
+  },
+
+  'Kitchen Tools': {
+    emoji: '🍳',
+    words: [
+      'Whisk', 'Spatula', 'Rolling Pin', 'Colander', 'Measuring Cup', 'Can Opener',
+      'Peeler', 'Cheese Grater', 'Tongs', 'Ladle', 'Cutting Board', 'Mixing Bowl',
+      'Frying Pan', 'Blender', 'Toaster', 'Oven Mitt', 'Pizza Cutter', 'Ice Cream Scoop'
+    ]
+  },
+
+  'Amusement Parks': {
+    emoji: '🎡',
+    words: [
+      'Roller Coaster', 'Ferris Wheel', 'Carousel', 'Bumper Cars', 'Log Flume', 'Drop Tower',
+      'Haunted House', 'Funhouse Mirror', 'Ring Toss', 'Prize Booth', 'Cotton Candy', 'Funnel Cake',
+      'Water Slide', 'Wave Pool', 'Lazy River', 'Photo Booth', 'Ticket Booth', 'Fast Pass'
+    ]
+  },
+
+  'Camping Gear': {
+    emoji: '🏕️',
+    words: [
+      'Tent', 'Sleeping Bag', 'Lantern', 'Headlamp', 'Cooler', 'Camp Stove',
+      'Camp Chair', 'Hammock', 'Tarp', 'First Aid Kit', 'Water Bottle', 'Bug Spray',
+      'Binoculars', 'Trail Map', 'Hiking Boots', 'Rain Jacket', 'Tent Stakes', 'Sleeping Pad'
     ]
   }
 }

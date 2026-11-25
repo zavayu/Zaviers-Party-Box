@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ImposterRoleCard from '../components/ImposterRoleCard'
 import GAME_DATA from '../game-data/imposterData'
 
 function ImposterGame({ onBack }) {
@@ -12,7 +13,6 @@ function ImposterGame({ onBack }) {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
 
-  const displayCategory = category.replace(/_/g, ' ')
 
   // Start new game from home
   const handleStartGame = () => {
@@ -356,42 +356,11 @@ function ImposterGame({ onBack }) {
                 <h2 className="text-2xl font-bold text-white mb-6 text-center">
                   Player {currentPlayerIndex + 1}
                 </h2>
-                <div className={`rounded-xl p-8 mb-8 text-center ${
-                  imposterIndices.includes(currentPlayerIndex)
-                    ? 'bg-red-900'
-                    : 'bg-green-900'
-                }`}>
-                  <p className="text-sm uppercase tracking-wide text-gray-200 mb-2">
-                    Category
-                  </p>
-                  <p className="text-xl font-semibold text-white mb-4">
-                    {displayCategory}
-                  </p>
-                  {imposterIndices.includes(currentPlayerIndex) ? (
-                    <>
-                      <p className="text-6xl mb-4">🎭</p>
-                      <p className="text-3xl font-bold text-white mb-4">
-                        You are the Imposter!
-                      </p>
-                      <p className="text-red-200">
-                        Pretend you know the secret word. Try not to get caught!
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-6xl mb-4">✓</p>
-                      <p className="text-2xl text-green-200 mb-4">
-                        The secret word is:
-                      </p>
-                      <p className="text-4xl font-bold text-white mb-4">
-                        {secretWord}
-                      </p>
-                      <p className="text-green-200">
-                        Find the imposter who doesn't know this word!
-                      </p>
-                    </>
-                  )}
-                </div>
+                <ImposterRoleCard
+                  category={category}
+                  isImposter={imposterIndices.includes(currentPlayerIndex)}
+                  secretWord={secretWord}
+                />
                 <button
                   onClick={handleNextPlayer}
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
