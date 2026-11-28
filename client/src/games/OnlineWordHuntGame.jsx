@@ -1,3 +1,4 @@
+import WordHuntStats from '../components/WordHuntStats'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnlineGame } from '../hooks/useOnlineGame'
@@ -488,12 +489,12 @@ function OnlineWordHuntGame() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="game-screen">
       <div className="max-w-md w-full">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={handleBackToHome}
-            className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
+            className="page-back"
           >
             ← Games
           </button>
@@ -546,42 +547,8 @@ function OnlineWordHuntGame() {
 
         {gamePhase === 'playing' && (
           <div className="space-y-4">
-            {/* Game Header */}
-            <div className="relative">
-              <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl relative z-10">
-                <div className="flex items-center gap-4">
-                  {/* Profile Picture */}
-                  <div className="shrink-0 w-18 h-18 rounded-full p-2 bg-[#3B82F6] items-center justify-center text-white font-bold text-2xl shadow-lg">
-                    <img src="/monkeyparty.png" alt="profile picture" />
-                  </div>
-
-                  {/* Stats */}
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-gray-400 text-2xl font-extrabold">WORDS:</span>
-                      <span className="text-blue-400 font-bold text-2xl">{foundWords.size}</span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-gray-400 text-4xl font-extrabold">SCORE:</span>
-                      <span className="text-white font-black text-4xl">{displayPlayerScore === 0 ? '0000' : displayPlayerScore.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {!isGameActive && (
-                  <div className="w-full bg-gray-700 text-gray-400 font-bold py-3 px-6 rounded-xl text-center mt-4">
-                    Game starting...
-                  </div>
-                )}
-              </div>
-
-              {/* Timer hanging from right side */}
-              <div className="absolute -bottom-10 right-0 bg-gray-800 rounded-xl px-4 py-2 shadow-xl z-0">
-                <p className={`text-lg font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
-                  {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-                </p>
-              </div>
-            </div>
+            <WordHuntStats wordCount={foundWords.size} score={displayPlayerScore} secondsRemaining={timeRemaining} />
+            {!isGameActive && <p className="text-center text-gray-300" role="status">Game starting…</p>}
 
             {/* Word Feedback */}
             <div className="h-14 flex items-center justify-center">
@@ -652,7 +619,7 @@ function OnlineWordHuntGame() {
                 })()}
 
                 {/* Grid */}
-                <div className="grid grid-cols-4 gap-3 h-full">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 h-full">
                   {board.map((letter, index) => {
                     const isSelected = selectedPath.includes(index)
 
@@ -695,7 +662,7 @@ function OnlineWordHuntGame() {
         )}
 
         {gamePhase === 'results' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Game Over!
             </h2>

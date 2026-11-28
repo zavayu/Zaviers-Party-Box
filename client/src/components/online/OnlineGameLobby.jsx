@@ -45,7 +45,7 @@ function OnlineGameLobby({
   const persistentPlayerId = localStorage.getItem('partybox-player-id')
 
   return (
-    <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+    <div className="game-panel">
       {/* Debug Panel - only show in development */}
       {import.meta.env.DEV && (
         <div className="bg-red-900 rounded-lg p-3 mb-4 text-xs">

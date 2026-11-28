@@ -74,13 +74,13 @@ function OutlierGame({ onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="game-screen">
       <div className="max-w-md w-full">
         {onBack && (
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={onBack}
-              className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
+              className="page-back"
             >
               ← Games
             </button>
@@ -90,7 +90,7 @@ function OutlierGame({ onBack }) {
 
         {/* HOME SCREEN */}
         {gamePhase === 'home' && (
-          <div className="bg-gray-800 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="game-panel text-center">
             <h1 className="text-6xl font-bold text-white mb-4">🔍</h1>
             <h2 className="text-4xl font-bold text-white mb-8">Wrong Answer</h2>
             <p className="text-gray-300 mb-8">
@@ -107,7 +107,7 @@ function OutlierGame({ onBack }) {
 
         {/* PLAYER COUNT */}
         {gamePhase === 'playerCount' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Number of Players
             </h2>
@@ -167,7 +167,7 @@ function OutlierGame({ onBack }) {
 
         {/* INSTRUCTIONS */}
         {gamePhase === 'instructions' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               How to Play
             </h2>
@@ -211,7 +211,7 @@ function OutlierGame({ onBack }) {
 
         {/* PROMPT REVEAL */}
         {gamePhase === 'promptReveal' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             {!isRevealed ? (
               <>
                 <h2 className="text-3xl font-bold text-white mb-8 text-center">
@@ -272,7 +272,7 @@ function OutlierGame({ onBack }) {
 
         {/* ANSWERS REVIEW */}
         {gamePhase === 'answersReview' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="game-panel max-h-[90vh] overflow-y-auto">
             <h2 className="text-3xl font-bold text-white mb-6 text-center sticky top-0 bg-gray-800 pb-2">
               Everyone's Answers
             </h2>
@@ -307,7 +307,7 @@ function OutlierGame({ onBack }) {
 
         {/* DISCUSSION */}
         {gamePhase === 'discussion' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Discussion Time
             </h2>
@@ -339,7 +339,7 @@ function OutlierGame({ onBack }) {
 
         {/* REVEAL */}
         {gamePhase === 'reveal' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               The Outlier Was...
             </h2>

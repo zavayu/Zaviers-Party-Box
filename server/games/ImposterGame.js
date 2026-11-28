@@ -1,4 +1,5 @@
 import { BaseGame } from './BaseGame.js'
+import { getWordHint } from './imposterHints.js'
 
 // Full game data from the pass-and-play version
 const GAME_DATA = {
@@ -350,30 +351,40 @@ export class ImposterGame extends BaseGame {
   constructor(room, broadcastCallback = null) {
     super(room, broadcastCallback)
     this.gameType = 'imposter'
+    this.usedWords = new Set()
+    this.lastWord = null
+    this.roundNumber = 0
   }
 
   initializeGame(selectedCategory = null) {
-    // Use selected category or pick random one
-    const categories = Object.keys(GAME_DATA)
-    const category = selectedCategory && GAME_DATA[selectedCategory] ? selectedCategory : this.getRandomElement(categories)
+    const allowed = Object.hasOwn(GAME_DATA, selectedCategory) ? [selectedCategory] : Object.keys(GAME_DATA)
+    const unused = word => !this.usedWords.has(word.toLowerCase())
+    const available = allowed.filter(category => GAME_DATA[category].words.some(unused))
+    const category = this.getRandomElement(available.length ? available : allowed)
     const words = GAME_DATA[category].words
-    const secretWord = this.getRandomElement(words)
+    const choices = words.filter(available.length ? unused : word => word !== this.lastWord)
+    const secretWord = this.getRandomElement(choices.length ? choices : words)
+    const playerIds = [...this.room.players.keys()]
+    const { imposterCount = 1, wordHints = false } = this.room.gameState
+    const count = Math.min(imposterCount, playerIds.length - 1)
 
-    // Assign random imposters (1 imposter for now)
-    const playerIds = Array.from(this.room.players.keys())
-    const shuffled = this.shuffleArray(playerIds)
-    const imposters = [shuffled[0]] // 1 imposter
+    if (!available.length) {
+      allowed.forEach(key => GAME_DATA[key].words.forEach(word => this.usedWords.delete(word.toLowerCase())))
+    }
+    this.usedWords.add(secretWord.toLowerCase())
+    this.lastWord = secretWord
 
-    // Initialize game state
     this.room.gameState = {
       secretWord,
       category,
-      imposters,
+      imposters: this.shuffleArray(playerIds).slice(0, count),
       votes: {},
       chatMessages: [],
-      currentTurnPlayerId: null,
       turnOrder: [],
-      selectedCategory: category // Store the selected category
+      selectedCategory,
+      imposterCount: count,
+      wordHints,
+      roundNumber: ++this.roundNumber,
     }
 
     console.log(`Imposter game initialized in room ${this.room.code} with category: ${category}`)
@@ -384,7 +395,11 @@ export class ImposterGame extends BaseGame {
     const isImposter = this.room.gameState.imposters.includes(playerId)
     return {
       isImposter,
-      secretWord: isImposter ? null : this.room.gameState.secretWord
+      roundNumber: this.room.gameState.roundNumber,
+      secretWord: isImposter ? null : this.room.gameState.secretWord,
+      wordHint: isImposter && this.room.gameState.wordHints
+        ? getWordHint(this.room.gameState.secretWord)
+        : undefined
     }
   }
 
@@ -401,23 +416,27 @@ export class ImposterGame extends BaseGame {
 
   handleChatMessage(playerId, messageText) {
     // Check if in discussion phase
-    if (this.room.gamePhase !== 'discussion') {
+    const isClueRound = this.room.gamePhase === 'clues'
+    if (!isClueRound && this.room.gamePhase !== 'discussion') {
       return { success: false, error: 'Chat is only available during discussion phase' }
     }
 
     // Check if it's the player's turn
-    if (this.room.gameState.currentTurnPlayerId !== playerId) {
+    if (isClueRound && this.getCurrentCluePlayer() !== playerId) {
       return { success: false, error: 'It is not your turn to chat' }
     }
 
     // Validate message (single word, no empty messages)
-    const trimmedMessage = messageText.trim()
+    const trimmedMessage = typeof messageText === 'string' ? messageText.trim() : ''
     if (!trimmedMessage) {
       return { success: false, error: 'Message cannot be empty' }
     }
 
     // Check if it's a single word (no spaces)
-    if (trimmedMessage.includes(' ')) {
+    if (trimmedMessage.length > (isClueRound ? 50 : 300)) {
+      return { success: false, error: 'Message is too long' }
+    }
+    if (isClueRound && /\s/.test(trimmedMessage)) {
       return { success: false, error: 'Please send only one word at a time' }
     }
 
@@ -431,11 +450,6 @@ export class ImposterGame extends BaseGame {
     }
 
     this.room.gameState.chatMessages.push(chatMessage)
-
-    // Move to next player's turn
-    const currentIndex = this.room.gameState.turnOrder.indexOf(playerId)
-    const nextIndex = (currentIndex + 1) % this.room.gameState.turnOrder.length
-    this.room.gameState.currentTurnPlayerId = this.room.gameState.turnOrder[nextIndex]
 
     console.log(`Chat message from ${player.name} in room ${this.room.code}: "${trimmedMessage}"`)
     return { success: true }
@@ -466,63 +480,62 @@ export class ImposterGame extends BaseGame {
 
   canAdvancePhase(newPhase) {
     switch (newPhase) {
+      case 'clues':
+        return { canAdvance: this.room.gamePhase === 'roleReveal' }
       case 'discussion':
-        return { canAdvance: true }
+        return {
+          canAdvance: this.room.gamePhase === 'clues' && !this.getCurrentCluePlayer(),
+          error: 'Wait for everyone to give a clue.'
+        }
       case 'voting':
-        return { canAdvance: true }
+        return { canAdvance: this.room.gamePhase === 'discussion' }
       case 'results':
-        // Ensure everyone has voted
-        const votesCount = Object.keys(this.room.gameState.votes).length
-        const playersCount = this.room.players.size
-        if (votesCount < playersCount) {
-          return { 
-            canAdvance: false, 
-            error: `Not all players have voted yet. ${playersCount - votesCount} player(s) still need to vote.` 
-          }
+        if (this.room.gamePhase !== 'voting') return { canAdvance: false }
+        if ([...this.room.players.values()].some(player => player.isConnected !== false &&
+          !this.room.gameState.votes[player.id])) {
+          return { canAdvance: false, error: 'Wait for everyone to vote.' }
         }
         return { canAdvance: true }
       default:
-        return { canAdvance: true }
+        return { canAdvance: false }
     }
+  }
+
+  getCurrentCluePlayer() {
+    if (this.room.gamePhase !== 'clues') return null
+    const { turnOrder, chatMessages } = this.room.gameState
+    return turnOrder.find(id => {
+      const player = this.room.players.get(id)
+      return player && player.isConnected !== false && !chatMessages.some(clue => clue.playerId === id)
+    }) ?? null
   }
 
   onPhaseAdvanced(newPhase) {
-    if (newPhase === 'discussion') {
-      this.setupDiscussionTurns()
+    if (newPhase === 'clues') {
+      const players = [...this.room.players.values()].filter(player => player.isConnected !== false)
+      this.room.gameState.turnOrder = this.shuffleArray(players.map(player => player.id))
     }
   }
 
-  setupDiscussionTurns() {
-    // Create randomized turn order
-    const playerIds = Array.from(this.room.players.keys())
-    const shuffledOrder = this.shuffleArray(playerIds)
-    
-    this.room.gameState.turnOrder = shuffledOrder
-    this.room.gameState.currentTurnPlayerId = shuffledOrder[0]
-    this.room.gameState.chatMessages = []
-    
-    console.log(`Discussion turns set up for room ${this.room.code}. Turn order:`, shuffledOrder)
+  onPlayerReconnected(oldId, newId) {
+    const state = this.room.gameState
+    if (!state.turnOrder) return
+    const replaceId = id => id === oldId ? newId : id
+    state.imposters = state.imposters.map(replaceId)
+    state.turnOrder = state.turnOrder.map(replaceId)
+    state.chatMessages.forEach(message => { message.playerId = replaceId(message.playerId) })
+    state.votes = Object.fromEntries(Object.entries(state.votes).map(([from, to]) => [replaceId(from), replaceId(to)]))
   }
 
   resetGame() {
-    this.room.gameState = {
-      secretWord: null,
-      category: null,
-      imposters: [],
-      votes: {},
-      chatMessages: [],
-      currentTurnPlayerId: null,
-      turnOrder: [],
-      selectedCategory: null // Reset selected category
-    }
+    this.room.gameState = {}
   }
 
-  // Helper method to get available categories
   getAvailableCategories() {
-    return Object.keys(GAME_DATA).map(category => ({
-      name: category,
-      emoji: GAME_DATA[category].emoji,
-      wordCount: GAME_DATA[category].words.length
+    return Object.keys(GAME_DATA).map(name => ({
+      name,
+      emoji: GAME_DATA[name].emoji,
+      wordCount: GAME_DATA[name].words.length
     }))
   }
 }

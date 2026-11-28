@@ -1,3 +1,4 @@
+import WordHuntStats from '../components/WordHuntStats'
 import { useState, useEffect, useRef } from 'react'
 import { WORD_HUNT_DICTIONARY } from '../game-data/wordHuntData'
 
@@ -465,11 +466,11 @@ export default function WordHuntGame({ onBack }) {
 
   if (gamePhase === 'home') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+      <div className="game-screen">
         <div className="max-w-md w-full space-y-6 text-center">
           <button
             onClick={onBack}
-            className="absolute top-6 left-6 text-gray-400 hover:text-white transition-colors"
+            className="page-back self-start"
           >
             ← Back
           </button>
@@ -512,11 +513,11 @@ export default function WordHuntGame({ onBack }) {
     const maxPossibleScore = allPossibleWords.reduce((sum, word) => sum + calculateScore(word.length), 0)
     
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+      <div className="game-screen">
         <div className="max-w-md w-full space-y-6 text-center">
           <button
             onClick={onBack}
-            className="absolute top-6 left-6 text-gray-400 hover:text-white transition-colors"
+            className="page-back self-start"
           >
             ← Back
           </button>
@@ -672,54 +673,16 @@ export default function WordHuntGame({ onBack }) {
 
   // Playing phase
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <button
-        onClick={onBack}
-        className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
-      >
-        ← Back
-      </button>
-
-      <button
-        onClick={endGameEarly}
-        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-sm"
-      >
-        End Game
-      </button>
-
-      {/* Header */}
-      <div className="w-full max-w-md mb-4 relative">
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl relative z-10">
-          <div className="flex items-center gap-6">
-            {/* Profile Picture */}
-            <div className="shrink-0 w-18 h-18 rounded-full p-2 bg-[#3B82F6] items-center justify-center text-white font-bold text-2xl shadow-lg">
-              <img src="/monkeyparty.png" alt="profile picture" />
-            </div>
-            
-            {/* Stats */}
-            <div className="space-y-1 flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-gray-400 text-2xl font-extrabold">WORDS:</span>
-                <span className="text-blue-400 font-bold text-2xl">{foundWords.size}</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-gray-400 text-4xl font-extrabold">SCORE:</span>
-                <span className="text-white font-black text-4xl">{displayScore === 0 ? '0000' : displayScore.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Timer hanging from right side */}
-        <div className="absolute -bottom-10 right-0 bg-gray-800 n     rounded-xl px-4 py-2 shadow-xl z-0">
-          <p className={`text-lg font-bold ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
-            {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-          </p>
-        </div>
+    <div className="game-screen game-screen-stack">
+      <div className="game-toolbar">
+        <button onClick={onBack} className="page-back">← Games</button>
+        <button onClick={endGameEarly} className="page-back">End Game</button>
       </div>
 
+      <WordHuntStats wordCount={foundWords.size} score={displayScore} secondsRemaining={timeRemaining} />
+
       {/* Word preview & feedback (fixed space, top-aligned) */}
-      <div className="w-fit max-w-md mb-4" aria-live="polite">
+      <div className="w-fit max-w-full" aria-live="polite">
         <div
           className={`h-14 flex items-center justify-center rounded-lg px-4 font-bold text-lg tracking-wider transition-all duration-200
             ${selectedPath.length || wordFeedback ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
@@ -795,7 +758,7 @@ export default function WordHuntGame({ onBack }) {
         })()}
 
         {/* Grid */}
-        <div className="grid grid-cols-4 gap-3 h-full">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 h-full">
           {board.map((letter, index) => {
             const isSelected = selectedPath.includes(index)
             

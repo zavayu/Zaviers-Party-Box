@@ -1,3 +1,5 @@
+import { categoryLabel } from './ImposterSetupFields'
+
 const starterHints = {
   Animals: 'Try a clue about how the animal moves or where it lives.',
   Food: 'Try a clue about texture or when you might eat it.',
@@ -31,11 +33,9 @@ const starterHints = {
   'Camping Gear': 'Try a clue about when during a trip you might need it.',
 }
 
-const categoryLabels = { VideoGames: 'Video Games', Animes: 'Anime' }
-
-export default function ImposterRoleCard({ category, isImposter, secretWord }) {
-  const label = categoryLabels[category] ?? category?.replace(/_/g, ' ')
-  const hint = starterHints[label] ?? 'Try a clue about where you might encounter something in this category.'
+export default function ImposterRoleCard({ category, isImposter, secretWord, wordHint }) {
+  const label = categoryLabel(category)
+  const hint = wordHint ?? starterHints[label] ?? 'Try a clue about where you might encounter something in this category.'
 
   return (
     <div className="rounded-xl bg-gray-900 p-8 mb-8 text-center">

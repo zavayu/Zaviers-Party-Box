@@ -12,7 +12,7 @@ export const GAME_CONFIG = {
     name: 'Secret Word',
     minPlayers: 3,
     maxPlayers: 10,
-    phases: ['lobby', 'roleReveal', 'discussion', 'voting', 'results'],
+    phases: ['lobby', 'roleReveal', 'clues', 'discussion', 'voting', 'results'],
     requiresHost: true,
     turnBased: true
   },

@@ -2,14 +2,6 @@ import { GameFactory } from '../games/GameFactory.js'
 import { Room } from '../models/Room.js'
 import { getGameConfig, validatePlayerCount } from '../utils/gameRegistry.js'
 
-// Valid categories for imposter game (could be imported from game data)
-const VALID_CATEGORIES = [
-  'Animals', 'Food', 'Movies', 'Sports', 'Professions', 'Countries', 'Cities', 
-  'Brands', 'Instruments', 'Colors', 'Vehicles', 'Furniture', 'Technology', 
-  'Clothing', 'Weather', 'School', 'Superheroes', 'Body', 'Hobbies', 
-  'VideoGames', 'Animes', 'Nature'
-]
-
 // Generate unique room code
 function generateRoomCode(rooms) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -59,7 +51,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
         handleUpdateGameSettings(clientId, message.settings)
         break
       case 'playAgain':
-        handlePlayAgain(clientId)
+        handlePlayAgain(clientId, message.changeCategory)
         break
       default:
         // Try to handle as game-specific message
@@ -79,6 +71,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
 
     const roomCode = generateRoomCode(rooms)
     const room = new Room(roomCode, clientId, gameType)
+    if (gameType === 'imposter') room.setGameInstance(GameFactory.createGame(gameType, room, broadcastToRoom))
 
     client.roomCode = roomCode
     client.playerName = playerName
@@ -276,14 +269,16 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     }
 
     // Check if already started
-    if (room.gamePhase !== 'lobby') {
+    if (room.gamePhase !== 'lobby' && !(room.gameType === 'imposter' && room.gamePhase === 'results')) {
       sendError(clientId, 'Game already started')
       return
     }
 
     // Create game instance
     try {
-      const gameInstance = GameFactory.createGame(room.gameType, room, broadcastToRoom)
+      const gameInstance = room.gameType === 'imposter' && room.gameInstance
+        ? room.gameInstance
+        : GameFactory.createGame(room.gameType, room, broadcastToRoom)
       room.setGameInstance(gameInstance)
       
       // Initialize the game
@@ -415,15 +410,20 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
       room.gameState = {}
     }
 
-    // Update settings
-    if (settings.category) {
-      // Validate category exists
-      if (!VALID_CATEGORIES.includes(settings.category)) {
-        sendError(clientId, 'Invalid category selected')
-        return
-      }
-      room.gameState.selectedCategory = settings.category
+    if (room.gameType !== 'imposter' || !settings || typeof settings !== 'object') return
+    const { category, imposterCount, wordHints } = settings
+    if (category != null && category !== '' && !room.gameInstance.getAvailableCategories().some(option => option.name === category)) {
+      sendError(clientId, 'Invalid category selected')
+      return
     }
+    if (imposterCount != null && (!Number.isInteger(imposterCount) ||
+      imposterCount < 1 || imposterCount > Math.max(1, room.players.size - 1))) {
+      sendError(clientId, 'Choose fewer imposters than players')
+      return
+    }
+    if ('category' in settings) room.gameState.selectedCategory = category || null
+    if (imposterCount != null) room.gameState.imposterCount = imposterCount
+    if (typeof wordHints === 'boolean') room.gameState.wordHints = wordHints
 
     console.log(`Game settings updated in room ${client.roomCode}:`, settings)
 
@@ -434,7 +434,7 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
     })
   }
 
-  function handlePlayAgain(clientId) {
+  function handlePlayAgain(clientId, changeCategory) {
     const client = clients.get(clientId)
     if (!client || !client.roomCode) {
       sendError(clientId, 'Not in a room')
@@ -453,8 +453,19 @@ export function createMessageHandler(rooms, clients, broadcastToRoom, sendMessag
       return
     }
 
-    // Reset game state
-    room.resetForNewGame()
+    if (room.gameType === 'imposter') {
+      if (room.gamePhase !== 'results') return
+      if (!changeCategory) {
+        handleStartGame(clientId)
+        return
+      }
+      const { selectedCategory, imposterCount, wordHints } = room.gameState
+      room.gamePhase = 'lobby'
+      room.gameState = { selectedCategory, imposterCount, wordHints }
+    } else {
+      room.resetForNewGame()
+    }
+
 
     console.log(`Game reset to lobby in room ${client.roomCode}`)
 

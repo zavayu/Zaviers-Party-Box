@@ -89,11 +89,11 @@ export default function WordleGame({ onBack }) {
 
   if (gamePhase === 'home') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+      <div className="game-screen">
         <div className="max-w-md w-full space-y-6 text-center">
           <button
             onClick={onBack}
-            className="absolute top-6 left-6 text-gray-400 hover:text-white transition-colors"
+            className="page-back"
           >
             ← Back
           </button>
@@ -131,32 +131,22 @@ export default function WordleGame({ onBack }) {
 
   if (gamePhase === 'playing') {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-3">
-        <button
-          onClick={onBack}
-          className="absolute top-6 left-6 text-gray-400 hover:text-white transition-colors"
-        >
-          ← Back
-        </button>
+      <div className="game-screen game-screen-stack">
+        <div className="game-toolbar">
+          <button onClick={onBack} className="page-back">← Games</button>
+          {gameStatus !== 'playing' && !showPopup && (
+            <button onClick={initGame} className="page-back">Play Again</button>
+          )}
+        </div>
 
-        {/* Play Again button when game is over and popup is closed */}
-        {gameStatus !== 'playing' && !showPopup && (
-          <button
-            onClick={initGame}
-            className="absolute top-6 right-6 px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors"
-          >
-            Play Again
-          </button>
-        )}
-
-        <h1 className="text-4xl font-black text-white mb-8">Wordle</h1>
+        <h1 className="text-3xl font-extrabold text-white mb-4">Wordle</h1>
 
         {/* Guesses Grid */}
-        <div className="space-y-2 mb-8">
+        <div className="space-y-1.5 mb-5">
           {Array(6)
             .fill(null)
             .map((_, rowIdx) => (
-              <div key={rowIdx} className="flex gap-2">
+              <div key={rowIdx} className="flex gap-1.5">
                 {Array(5)
                   .fill(null)
                   .map((_, colIdx) => {
@@ -180,7 +170,7 @@ export default function WordleGame({ onBack }) {
                     return (
                       <div
                         key={colIdx}
-                        className={`w-14 h-14 rounded-lg flex items-center justify-center text-2xl font-bold text-white border-2 ${borderColor} ${bgColor} transition-all`}
+                        className={`wordle-tile rounded-md flex items-center justify-center text-2xl font-bold text-white border-2 ${borderColor} ${bgColor} transition-all`}
                       >
                         {isCurrentRow ? currentLetter : letter}
                       </div>
@@ -230,16 +220,16 @@ export default function WordleGame({ onBack }) {
         )}
 
         {/* Keyboard */}
-        <div className="w-full space-y-2 mb-6">
+        <div className="w-full max-w-md space-y-1.5">
           {['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map((row, idx) => (
             <div
               key={idx}
-              className="flex gap-1.5 justify-center"
+              className="wordle-key-row"
             >
               {idx === 2 && (
                 <button
                   onClick={handleGuess}
-                  className="w-16 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold text-xs transition-all disabled:opacity-50"
+                  className="wordle-key wordle-key-wide bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold text-xs transition-all disabled:opacity-50"
                   disabled={gameStatus !== 'playing' || currentGuess.length !== 5}
                 >
                   ENTER
@@ -256,7 +246,7 @@ export default function WordleGame({ onBack }) {
                       })
                     }
                   }}
-                  className={`w-10 h-14 rounded-md font-bold text-lg transition-all ${getKeyboardColor(letter)}`}
+                  className={`wordle-key rounded-md font-bold text-lg transition-all ${getKeyboardColor(letter)}`}
                   disabled={gameStatus !== 'playing'}
                 >
                   {letter}
@@ -265,7 +255,8 @@ export default function WordleGame({ onBack }) {
               {idx === 2 && (
                 <button
                   onClick={() => setCurrentGuess((prev) => prev.slice(0, -1))}
-                  className="w-16 h-14 bg-gray-700 hover:bg-gray-600 text-white rounded-md font-bold text-xl transition-all disabled:opacity-50"
+                  aria-label="Delete letter"
+                  className="wordle-key wordle-key-wide bg-gray-700 hover:bg-gray-600 text-white rounded-md font-bold text-xl transition-all disabled:opacity-50"
                   disabled={gameStatus !== 'playing' || currentGuess.length === 0}
                 >
                   ⌫

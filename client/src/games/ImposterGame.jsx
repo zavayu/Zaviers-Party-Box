@@ -2,335 +2,97 @@ import { useState } from 'react'
 import ImposterRoleCard from '../components/ImposterRoleCard'
 import GAME_DATA from '../game-data/imposterData'
 
+import { CategoryField, CountField, HintField } from '../components/ImposterSetupFields'
+import ImposterClueOrder from '../components/ImposterClueOrder'
+import { getWordHint } from '../game-data/imposterHints'
+
+const categories = Object.keys(GAME_DATA)
+const primaryButton = 'w-full min-h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-lg'
+const secondaryButton = 'w-full min-h-12 bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-3 rounded-lg'
+
+function shuffle(items) {
+  const shuffled = [...items]
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const other = Math.floor(Math.random() * (index + 1))
+    const item = shuffled[index]
+    shuffled[index] = shuffled[other]
+    shuffled[other] = item
+  }
+  return shuffled
+}
+
 function ImposterGame({ onBack }) {
-  // Game state
-  const [gamePhase, setGamePhase] = useState('home')
-  const [category, setCategory] = useState('')
+  const [gamePhase, setGamePhase] = useState('setup')
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [playerCount, setPlayerCount] = useState(3)
   const [imposterCount, setImposterCount] = useState(1)
-  const [imposterIndices, setImposterIndices] = useState([])
-  const [secretWord, setSecretWord] = useState('')
+  const [wordHints, setWordHints] = useState(false)
+  const [usedWords, setUsedWords] = useState(new Set())
+  const [round, setRound] = useState(null)
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
 
-
-  // Start new game from home
-  const handleStartGame = () => {
-    setGamePhase('categorySelect')
-  }
-
-  // Select category and move to player count
-  const handleCategorySelect = (selectedCategory) => {
-    setCategory(selectedCategory)
-    setGamePhase('playerCount')
-  }
-
-  // Set player count and move to imposter count
-  const handlePlayerCountSubmit = () => {
-    if (playerCount >= 3) {
-      // Ensure imposters do not exceed players
-      setImposterCount((prev) => Math.max(1, Math.min(prev, playerCount)))
-      setGamePhase('imposterCount')
-    }
-  }
-
-  // Set imposter count and move to confirm
-  const handleImposterCountSubmit = () => {
-    if (imposterCount >= 1 && imposterCount <= playerCount) {
-      setGamePhase('confirm')
-    }
-  }
-
-  // Confirm and initialize game
-  const handleConfirm = () => {
+  const startRound = () => {
+    const allowed = selectedCategory ? [selectedCategory] : categories
+    const unused = word => !usedWords.has(word.toLowerCase())
+    const available = allowed.filter(category => GAME_DATA[category].words.some(unused))
+    const category = shuffle(available.length ? available : allowed)[0]
     const words = GAME_DATA[category].words
-    const randomWord = words[Math.floor(Math.random() * words.length)]
-    setSecretWord(randomWord)
+    const choices = words.filter(available.length ? unused : word => word !== round?.secretWord)
+    const secretWord = shuffle(choices.length ? choices : words)[0]
+    const playerIndices = Array.from({ length: playerCount }, (_, index) => index)
 
-    // Pick random imposters
-    const indices = Array.from({ length: playerCount }, (_, i) => i)
-    for (let i = indices.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[indices[i], indices[j]] = [indices[j], indices[i]]
-    }
-    setImposterIndices(indices.slice(0, imposterCount))
-
+    const nextUsed = new Set(usedWords)
+    if (!available.length) allowed.forEach(key => GAME_DATA[key].words.forEach(word => nextUsed.delete(word.toLowerCase())))
+    nextUsed.add(secretWord.toLowerCase())
+    setUsedWords(nextUsed)
+    setRound({
+      category, secretWord,
+      imposterIndices: shuffle(playerIndices).slice(0, imposterCount),
+      clueOrder: shuffle(playerIndices),
+    })
     setCurrentPlayerIndex(0)
     setIsRevealed(false)
     setGamePhase('playerReveal')
   }
 
-  const handleReveal = () => {
-    setIsRevealed(true)
-  }
-
   const handleNextPlayer = () => {
-    if (currentPlayerIndex < playerCount - 1) {
-      setCurrentPlayerIndex(currentPlayerIndex + 1)
-      setIsRevealed(false)
-    } else {
-      setGamePhase('discussion')
-    }
-  }
-
-  const handleShowResults = () => {
-    setGamePhase('results')
-  }
-
-  const handlePlayAgain = () => {
-    setGamePhase('home')
-    setCategory('')
-    setPlayerCount(3)
-    setImposterCount(1)
-    setImposterIndices([])
-    setSecretWord('')
-    setCurrentPlayerIndex(0)
     setIsRevealed(false)
+    if (currentPlayerIndex + 1 === playerCount) setGamePhase('clues')
+    else setCurrentPlayerIndex(currentPlayerIndex + 1)
   }
 
-  const handleBack = () => {
-    switch (gamePhase) {
-      case 'home':
-        if (onBack) onBack()
-        break
-      case 'categorySelect':
-        setGamePhase('home')
-        break
-      case 'playerCount':
-        setGamePhase('categorySelect')
-        break
-      case 'imposterCount':
-        setGamePhase('playerCount')
-        break
-      case 'confirm':
-        setGamePhase('imposterCount')
-        break
-      case 'playerReveal':
-      case 'discussion':
-      case 'results':
-        // Once game has started, go back to home
-        setGamePhase('home')
-        setCategory('')
-        setPlayerCount(3)
-        setImposterCount(1)
-        setImposterIndices([])
-        setSecretWord('')
-        setCurrentPlayerIndex(0)
-        setIsRevealed(false)
-        break
-      default:
-        break
-    }
-  }
+  const { category, secretWord, imposterIndices, clueOrder } = round ?? {}
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="game-screen">
       <div className="max-w-md w-full">
         <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={handleBack}
-            className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
-          >
-            ← {gamePhase === 'home' ? 'Games' : gamePhase === 'playerReveal' || gamePhase === 'discussion' || gamePhase === 'results' ? 'Start' : 'Back'}
+          <button onClick={gamePhase === 'setup' ? onBack : () => setGamePhase('setup')} className="page-back">
+            ← {gamePhase === 'setup' ? 'Games' : 'Setup'}
           </button>
-          <span className="text-gray-400 text-sm">Imposter</span>
+          {gamePhase !== 'setup' && <span className="text-gray-400 text-sm">Imposter</span>}
         </div>
 
-        {/* HOME SCREEN */}
-        {gamePhase === 'home' && (
-          <div className="bg-gray-800 rounded-2xl p-8 text-center shadow-2xl">
-            <h1 className="text-6xl font-bold text-white mb-4">🕵️</h1>
-            <h2 className="text-4xl font-bold text-white mb-8">Imposter</h2>
-            <p className="text-gray-300 mb-8">
-              One player is the imposter. Can you find them?
-            </p>
-            <button
-              onClick={handleStartGame}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Start Game
-            </button>
-          </div>
-        )}
-
-        {/* CATEGORY SELECT */}
-        {gamePhase === 'categorySelect' && (
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-3xl font-bold text-white mb-4 text-center bg-gray-800 pb-2">
-              Choose Category
-            </h2>
+        {gamePhase === 'setup' && (
+          <form className="game-panel space-y-5" onSubmit={event => { event.preventDefault(); startRound() }}>
+            <h1 className="text-3xl font-extrabold">Imposter</h1>
+            <CategoryField categories={categories} value={selectedCategory} onChange={setSelectedCategory} />
             <div className="grid grid-cols-2 gap-3">
-              {Object.keys(GAME_DATA).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategorySelect(cat)}
-                  className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white font-semibold py-6 px-4 rounded-xl text-base transition-colors min-h-[80px] flex flex-col items-center justify-center text-center gap-2"
-                >
-                  <span className="text-3xl">{GAME_DATA[cat].emoji}</span>
-                  <span>{cat.replace(/_/g, ' ')}</span>
-                </button>
-              ))}
+              <CountField label="Players" value={playerCount} min={3} max={Math.max(20, playerCount + 1)} onChange={count => {
+                setPlayerCount(count)
+                setImposterCount(value => Math.min(value, count - 1))
+              }} />
+              <CountField label="Imposters" value={imposterCount} min={1} max={playerCount - 1} onChange={setImposterCount} />
             </div>
-          </div>
-        )}
-
-        {/* PLAYER COUNT */}
-        {gamePhase === 'playerCount' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-white mb-6 text-center">
-              Number of Players
-            </h2>
-            
-            <div className="bg-gray-700 rounded-2xl p-8 mb-6 text-center">
-              <div className="text-6xl font-bold text-white mb-2">
-                {playerCount}
-              </div>
-              <div className="text-gray-400 text-sm">players</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <button
-                onClick={() => setPlayerCount(Math.max(3, playerCount - 1))}
-                disabled={playerCount <= 3}
-                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-6 px-8 rounded-xl text-4xl transition-colors"
-              >
-                −
-              </button>
-              <button
-                onClick={() => setPlayerCount(playerCount + 1)}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-8 rounded-xl text-4xl transition-colors"
-              >
-                +
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 mb-6">
-              {[3, 5, 7, 10].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => setPlayerCount(count)}
-                  className={`py-3 px-4 rounded-lg text-white font-semibold transition-colors ${
-                    playerCount === count
-                      ? 'bg-blue-600'
-                      : 'bg-gray-700 hover:bg-gray-600'
-                  }`}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-
-            <p className="text-gray-400 text-center mb-6 text-sm">
-              Minimum 3 players required
-            </p>
-
-            <button
-              onClick={handlePlayerCountSubmit}
-              disabled={playerCount < 3}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {/* IMPOSTER COUNT */}
-        {gamePhase === 'imposterCount' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-white mb-6 text-center">
-              Number of Imposters
-            </h2>
-
-            <div className="bg-gray-700 rounded-2xl p-8 mb-6 text-center">
-              <div className="text-6xl font-bold text-white mb-2">
-                {imposterCount}
-              </div>
-              <div className="text-gray-400 text-sm">imposters</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <button
-                onClick={() => setImposterCount(Math.max(1, imposterCount - 1))}
-                disabled={imposterCount <= 1}
-                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-6 px-8 rounded-xl text-4xl transition-colors"
-              >
-                −
-              </button>
-              <button
-                onClick={() => setImposterCount(Math.min(playerCount, imposterCount + 1))}
-                disabled={imposterCount >= playerCount}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-6 px-8 rounded-xl text-4xl transition-colors"
-              >
-                +
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 mb-6">
-              {[1, 2, 3, 4].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => setImposterCount(Math.min(count, playerCount))}
-                  disabled={count > playerCount}
-                  className={`py-3 px-4 rounded-lg text-white font-semibold transition-colors ${
-                    imposterCount === count
-                      ? 'bg-blue-600'
-                      : 'bg-gray-700 hover:bg-gray-600'
-                  } ${count > playerCount ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-
-            <p className="text-gray-400 text-center mb-6 text-sm">
-              At least 1 imposter, and no more than players.
-            </p>
-
-            <button
-              onClick={handleImposterCountSubmit}
-              disabled={imposterCount < 1 || imposterCount > playerCount}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {/* CONFIRM */}
-        {gamePhase === 'confirm' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-white mb-6 text-center">
-              Ready to Start?
-            </h2>
-            <div className="bg-gray-700 rounded-xl p-6 mb-8 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300 text-lg">Category:</span>
-                <span className="text-white font-bold text-lg">{category}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300 text-lg">Players:</span>
-                <span className="text-white font-bold text-lg">{playerCount}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300 text-lg">Imposters:</span>
-                <span className="text-white font-bold text-lg">{imposterCount}</span>
-              </div>
-            </div>
-            <p className="text-gray-300 mb-6 text-center">
-              Pass the phone around. Each player will tap to reveal their role.
-            </p>
-            <button
-              onClick={handleConfirm}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Start Game
-            </button>
-          </div>
+            <HintField checked={wordHints} onChange={setWordHints} />
+            <button className={primaryButton}>Start Round</button>
+          </form>
         )}
 
         {/* PLAYER REVEAL LOOP */}
         {gamePhase === 'playerReveal' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             {!isRevealed ? (
               <>
                 <h2 className="text-3xl font-bold text-white mb-8 text-center">
@@ -345,7 +107,7 @@ function ImposterGame({ onBack }) {
                   </p>
                 </div>
                 <button
-                  onClick={handleReveal}
+                  onClick={() => setIsRevealed(true)}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-8 rounded-xl text-xl transition-colors"
                 >
                   Tap to Reveal
@@ -360,50 +122,47 @@ function ImposterGame({ onBack }) {
                   category={category}
                   isImposter={imposterIndices.includes(currentPlayerIndex)}
                   secretWord={secretWord}
+                  wordHint={wordHints ? getWordHint(secretWord) : undefined}
                 />
                 <button
                   onClick={handleNextPlayer}
                   className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
                 >
-                  Hide & Pass Phone
+                  {currentPlayerIndex + 1 === playerCount ? 'Hide & Start Clues' : 'Hide & Pass Phone'}
                 </button>
               </>
             )}
           </div>
         )}
 
-        {/* DISCUSSION */}
+        {gamePhase === 'clues' && (
+          <section className="game-panel space-y-4">
+            <h2 className="text-2xl font-bold">First clues</h2>
+            <p>Take turns giving one word each. Start with Player {clueOrder[0] + 1}.</p>
+            <ImposterClueOrder names={clueOrder.map(index => `Player ${index + 1}`)} />
+            <button className={primaryButton} onClick={() => setGamePhase('discussion')}>Start Discussion</button>
+          </section>
+        )}
+
         {gamePhase === 'discussion' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-white mb-6 text-center">
-              Discussion Time
-            </h2>
-            <div className="bg-gray-700 rounded-xl p-6 mb-8 space-y-4">
-              <p className="text-gray-300 text-lg">
-                🗣️ Give one word hints about the secret word
-              </p>
-              <p className="text-gray-300 text-lg">
-                🕵️ Try to identify the imposter
-              </p>
-              <p className="text-gray-300 text-lg">
-                🎭 Imposter: blend in and survive!
-              </p>
-            </div>
-            <p className="text-gray-400 text-center mb-6">
-              When everyone is ready to see who the imposter was...
-            </p>
-            <button
-              onClick={handleShowResults}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Reveal Imposter
-            </button>
-          </div>
+          <section className="game-panel space-y-4">
+            <h2 className="text-2xl font-bold">Discussion</h2>
+            <p>Compare clues and decide who seemed to be guessing.</p>
+            <button className={primaryButton} onClick={() => setGamePhase('voting')}>Start Voting</button>
+          </section>
+        )}
+
+        {gamePhase === 'voting' && (
+          <section className="game-panel space-y-4">
+            <h2 className="text-2xl font-bold">Vote</h2>
+            <p>On the count of three, point to the player you think is an imposter.</p>
+            <button className={primaryButton} onClick={() => setGamePhase('results')}>Reveal Imposters</button>
+          </section>
         )}
 
         {/* RESULTS */}
         {gamePhase === 'results' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Results
             </h2>
@@ -429,11 +188,12 @@ function ImposterGame({ onBack }) {
               </p>
             </div>
             <button
-              onClick={handlePlayAgain}
+              onClick={startRound}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
             >
               Play Again
             </button>
+            <button className={`${secondaryButton} mt-3`} onClick={() => setGamePhase('setup')}>Change Category</button>
           </div>
         )}
 

@@ -156,6 +156,7 @@ export function useOnlineGame(gameType) {
       setPlayers(message.roomState.players)
       setGamePhase('lobby')
       setIsHost(true)
+      if (message.roomState.gameType === 'imposter') setGameState(message.roomState.gameState)
       
       // Store room info for reconnection - get player name from the current player
       const currentId = clientIdRef.current || clientId
@@ -225,6 +226,7 @@ export function useOnlineGame(gameType) {
     const cleanupPlayerDisconnected = onMessage('playerDisconnected', (message) => {
       console.log('Player disconnected:', message.playerId)
       setPlayers(message.roomState.players)
+      if (message.roomState.gameType === 'imposter') setGameState(message.roomState.gameState)
     })
 
     const cleanupPlayerJoined = onMessage('playerJoined', (message) => {
@@ -234,6 +236,7 @@ export function useOnlineGame(gameType) {
 
     const cleanupPlayerLeft = onMessage('playerLeft', (message) => {
       setPlayers(message.roomState.players)
+      if (message.roomState.gameType === 'imposter') setGameState(message.roomState.gameState)
       updateHostStatus(message.roomState.players)
     })
 

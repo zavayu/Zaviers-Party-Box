@@ -4,6 +4,7 @@ import { useOnlineGame } from '../hooks/useOnlineGame'
 import OnlineGameLobby from '../components/online/OnlineGameLobby'
 import CreateJoinRoom from '../components/online/CreateJoinRoom'
 import EnterName from '../components/online/EnterName'
+import ImposterClueOrder from '../components/ImposterClueOrder'
 import ImposterRoleCard from '../components/ImposterRoleCard'
 import GameSettings from '../components/online/GameSettings'
 
@@ -45,10 +46,18 @@ function OnlineImposterGame() {
   } = useOnlineGame('imposter')
 
   // Game-specific state
-  const [isImposter, setIsImposter] = useState(null)
-  const [secretWord, setSecretWord] = useState('')
-  const [votedPlayer, setVotedPlayer] = useState('')
-  const [votes, setVotes] = useState({})
+  const [role, setRole] = useState(null)
+  const roundRole = role?.roundNumber === gameState.roundNumber ? role : null
+  const isClueRound = gamePhase === 'clues'
+  const currentTurnPlayer = players.find(player => player.id === gameState.currentTurnPlayerId)
+  const myId = clientIdRef.current || clientId
+  const canWrite = !isClueRound || currentTurnPlayer?.id === myId
+  const votes = gameState.votes ?? {}
+  const pendingVotes = players.filter(player => player.isConnected !== false && !votes[player.id]).length
+  const clueOrder = (gameState.turnOrder ?? []).flatMap(id => {
+    const player = players.find(candidate => candidate.id === id)
+    return player ? [player.name] : []
+  })
   const [chatInput, setChatInput] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
@@ -66,19 +75,13 @@ function OnlineImposterGame() {
     if (!isConnected) return
 
     const cleanupPlayerRole = onMessage('playerRole', (message) => {
-      setIsImposter(message.isImposter)
-      setSecretWord(message.secretWord ?? '')
+      setRole(message)
     })
 
     const cleanupGameStateUpdate = onMessage('gameStateUpdate', (message) => {
-      if (message.roomState.gameState) {
-        setVotes(message.roomState.gameState.votes || {})
-      }
       // Reset local game state when returning to lobby
-      if (message.roomState.gamePhase === 'lobby') {
-        setIsImposter(null)
-        setSecretWord('')
-        setVotedPlayer('')
+      if (message.roomState.gamePhase === 'lobby' || message.roomState.gamePhase === 'roleReveal') {
+        if (message.roomState.gamePhase === 'lobby') setRole(null)
         setChatInput('')
       }
     })
@@ -138,7 +141,7 @@ function OnlineImposterGame() {
 
   const handleRevealComplete = () => {
     if (!isConnected || !isHost) return
-    sendMessage({ type: 'advancePhase', newPhase: 'discussion' })
+    sendMessage({ type: 'advancePhase', newPhase: 'clues' })
   }
 
   const handleStartVoting = () => {
@@ -147,29 +150,8 @@ function OnlineImposterGame() {
   }
 
   const handleVote = (votedPlayerId) => {
-    if (!isConnected) return
-    // Prevent voting for yourself
-    const currentId = clientIdRef.current || clientId
-    if (votedPlayerId === currentId) {
-      console.warn('Cannot vote for yourself')
-      return
-    }
-    
-    // Find current player ID from the players list using playerName
-    const currentPlayer = players.find(p => p.name === playerName)
-    const myPlayerId = currentPlayer?.id || currentId
-    
-    console.log('Voting - myPlayerId:', myPlayerId, 'votedPlayerId:', votedPlayerId)
+    if (!isConnected || votedPlayerId === myId) return
     sendMessage({ type: 'vote', votedPlayerId })
-    setVotedPlayer(votedPlayerId)
-    // Optimistically update votes state for immediate UI update
-    if (myPlayerId) {
-      setVotes(prevVotes => {
-        const updated = { ...prevVotes, [myPlayerId]: votedPlayerId }
-        console.log('Updated votes state:', updated)
-        return updated
-      })
-    }
   }
 
   const handleShowResults = () => {
@@ -177,9 +159,10 @@ function OnlineImposterGame() {
     sendMessage({ type: 'advancePhase', newPhase: 'results' })
   }
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = (changeCategory = false) => {
     if (!isConnected || !isHost) return
-    sendMessage({ type: 'playAgain' })
+    sendMessage({ type: 'playAgain', changeCategory })
+    if (changeCategory) setShowSettings(true)
   }
 
   const handleSendChatMessage = (e) => {
@@ -197,20 +180,17 @@ function OnlineImposterGame() {
     leaveRoom()
     navigate('/online')
     // Reset game-specific state
-    setIsImposter(null)
-    setSecretWord('')
-    setVotedPlayer('')
-    setVotes({})
+    setRole(null)
     setChatInput('')
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="game-screen">
       <div className="max-w-md w-full">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={handleBackToHome}
-            className="text-gray-200 hover:text-white text-sm bg-gray-800 border border-gray-700 px-3 py-2 rounded-lg transition-colors"
+            className="page-back"
           >
             ← Games
           </button>
@@ -264,15 +244,16 @@ function OnlineImposterGame() {
         )}
 
         {gamePhase === 'roleReveal' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Your Role
             </h2>
 
             <ImposterRoleCard
               category={gameState.category}
-              isImposter={isImposter}
-              secretWord={secretWord}
+              isImposter={roundRole?.isImposter}
+              secretWord={roundRole?.secretWord}
+              wordHint={roundRole?.wordHint}
             />
 
             {isHost && (
@@ -280,7 +261,7 @@ function OnlineImposterGame() {
                 onClick={handleRevealComplete}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
               >
-                Continue to Discussion
+                Start First Clues
               </button>
             )}
             {!isHost && (
@@ -291,11 +272,11 @@ function OnlineImposterGame() {
           </div>
         )}
 
-        {gamePhase === 'discussion' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+        {(isClueRound || gamePhase === 'discussion') && (
+          <div className="game-panel">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-3xl font-bold text-white text-center flex-1">
-                Discussion Time
+                {isClueRound ? 'First clues' : 'Discussion'}
               </h2>
               <button
                 onClick={() => setShowInstructions(!showInstructions)}
@@ -306,6 +287,7 @@ function OnlineImposterGame() {
               </button>
             </div>
 
+            {isClueRound && <ImposterClueOrder names={clueOrder} />}
             {/* Error Display */}
             {wsError && (
               <div className="mb-4 bg-red-900/50 border border-red-700 rounded-xl p-3 text-center">
@@ -314,7 +296,7 @@ function OnlineImposterGame() {
             )}
             
             {/* Chat Messages */}
-            <div className="bg-gray-700 rounded-xl p-4 mb-6 h-96 overflow-y-auto" ref={chatMessagesRef}>
+            <div className="bg-gray-700 rounded-xl p-4 mb-4 max-h-48 overflow-y-auto" ref={chatMessagesRef}>
               <h3 className="text-white font-bold mb-3">Chat Messages</h3>
               {gameState.chatMessages && gameState.chatMessages.length > 0 ? (
                 <div className="space-y-2">
@@ -336,57 +318,31 @@ function OnlineImposterGame() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-center italic">No messages yet. Start the discussion!</p>
+                <p className="text-gray-400 text-center italic">No messages yet.</p>
               )}
             </div>
 
-            {/* Turn Indicator and Chat Input */}
-            {(() => {
-              const currentPlayer = players.find(p => p.name === playerName)
-              const currentId = currentPlayer?.id || clientIdRef.current || clientId
-              const isMyTurn = gameState.currentTurnPlayerId === currentId
-              const currentTurnPlayer = players.find(p => p.id === gameState.currentTurnPlayerId)
-              
-              return (
-                <div className="mb-6">
-                  {isMyTurn ? (
-                    <div className="space-y-4">
-                      <div className="bg-green-900 rounded-xl p-4 text-center border-2 border-green-400">
-                        <p className="text-green-200 font-bold text-lg">
-                          🎯 Your turn! Send one word hint
-                        </p>
-                      </div>
-                      <form onSubmit={handleSendChatMessage} className="flex gap-3">
-                        <input
-                          type="text"
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          placeholder="Type one word..."
-                          className="flex-1 bg-gray-700 text-white px-4 py-3 rounded-xl border border-gray-600 focus:outline-none focus:border-blue-500"
-                          maxLength={50}
-                          autoFocus
-                        />
-                        <button
-                          type="submit"
-                          disabled={!chatInput.trim()}
-                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-colors"
-                        >
-                          Send
-                        </button>
-                      </form>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-700 rounded-xl p-4 text-center">
-                      <p className="text-gray-300 text-lg">
-                        ⏳ Waiting for <span className="text-white font-bold">
-                          {currentTurnPlayer?.name || 'someone'}
-                        </span> to send their hint...
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+            {isClueRound && (
+              <p className="text-gray-200 mb-3">
+                {canWrite ? 'Your turn. Give one word.' : currentTurnPlayer ? `Waiting for ${currentTurnPlayer.name}.` : 'Everyone has given a clue.'}
+              </p>
+            )}
+            {canWrite && (
+              <form onSubmit={handleSendChatMessage} className="flex gap-2 mb-5">
+                <input
+                  type="text"
+                  aria-label={isClueRound ? 'Your clue' : 'Message'}
+                  value={chatInput}
+                  onChange={event => setChatInput(event.target.value)}
+                  placeholder={isClueRound ? 'One word' : 'Discuss the clues'}
+                  className="min-w-0 flex-1 bg-gray-700 px-3 py-3 rounded-lg border border-gray-600"
+                  maxLength={isClueRound ? 50 : 300}
+                />
+                <button type="submit" disabled={!chatInput.trim()} className="bg-blue-600 disabled:bg-gray-600 font-bold px-4 rounded-lg">
+                  Send
+                </button>
+              </form>
+            )}
 
             {/* Game Instructions - Collapsible */}
             {showInstructions && (
@@ -403,28 +359,22 @@ function OnlineImposterGame() {
               </div>
             )}
 
-            {/* Host Controls */}
-            <p className="text-gray-400 text-center mb-6">
-              When everyone is ready to vote...
-            </p>
             {isHost && (
               <button
-                onClick={handleStartVoting}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
+                onClick={isClueRound
+                  ? () => sendMessage({ type: 'advancePhase', newPhase: 'discussion' })
+                  : handleStartVoting}
+                disabled={isClueRound && Boolean(currentTurnPlayer)}
+                className="w-full min-h-12 bg-blue-600 disabled:bg-gray-600 font-bold rounded-lg"
               >
-                Start Voting
+                {isClueRound ? 'Start Discussion' : 'Start Voting'}
               </button>
-            )}
-            {!isHost && (
-              <div className="w-full bg-gray-700 text-gray-400 font-bold py-4 px-8 rounded-xl text-center">
-                Waiting for host to start voting...
-              </div>
             )}
           </div>
         )}
 
         {gamePhase === 'voting' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Vote for the Imposter
             </h2>
@@ -433,14 +383,12 @@ function OnlineImposterGame() {
             </p>
 
             {(() => {
-              const currentPlayer = players.find(p => p.name === playerName)
-              const currentId = currentPlayer?.id || clientIdRef.current || clientId
-              const myVote = currentId ? votes[currentId] : null
+              const myVote = myId ? votes[myId] : null
               return (
                 <>
                   <div className="space-y-3 mb-6">
                     {players
-                      .filter((player) => player.id !== currentId)
+                      .filter(player => player.id !== myId)
                       .map((player) => {
                         const playerId = player.id
                         const hasVoted = myVote === playerId
@@ -481,15 +429,15 @@ function OnlineImposterGame() {
             {isHost && (
               <button
                 onClick={handleShowResults}
-                disabled={Object.keys(votes).length < players.length}
+                disabled={pendingVotes > 0}
                 className={`w-full font-bold py-4 px-8 rounded-xl text-xl transition-colors mt-4 ${
-                  Object.keys(votes).length < players.length
+                  pendingVotes > 0
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}
               >
-                {Object.keys(votes).length < players.length
-                  ? `Waiting for ${players.length - Object.keys(votes).length} more vote(s)...`
+                {pendingVotes > 0
+                  ? `Waiting for ${pendingVotes} more vote(s)...`
                   : 'Show Results'}
               </button>
             )}
@@ -497,7 +445,7 @@ function OnlineImposterGame() {
         )}
 
         {gamePhase === 'results' && (
-          <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+          <div className="game-panel">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">
               Results
             </h2>
@@ -520,7 +468,7 @@ function OnlineImposterGame() {
                 The secret word was:
               </p>
               <p className="text-3xl font-bold text-white">
-                {gameState.secretWord || secretWord}
+                {gameState.secretWord || roundRole?.secretWord}
               </p>
             </div>
             <div className="bg-gray-700 rounded-xl p-6 mb-8">
@@ -540,10 +488,15 @@ function OnlineImposterGame() {
             <div className="space-y-4">
               {isHost && (
                 <button
-                  onClick={handlePlayAgain}
+                  onClick={() => handlePlayAgain()}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
                 >
                   Play Again
+                </button>
+              )}
+              {isHost && (
+                <button onClick={() => handlePlayAgain(true)} className="w-full min-h-12 bg-gray-700 font-bold rounded-lg">
+                  Change Category
                 </button>
               )}
               {!isHost && (
@@ -561,14 +514,14 @@ function OnlineImposterGame() {
           </div>
         )}
 
-        {/* Game Settings Modal */}
-        <GameSettings
-          isOpen={showSettings}
-          onClose={handleCloseSettings}
-          currentSettings={gameState}
-          onUpdateSettings={handleUpdateSettings}
-          gameTitle="Secret Word"
-        />
+        {showSettings && gamePhase === 'lobby' && (
+          <GameSettings
+            onClose={handleCloseSettings}
+            currentSettings={gameState}
+            onUpdateSettings={handleUpdateSettings}
+            playerCount={players.length}
+          />
+        )}
       </div>
     </div>
   )

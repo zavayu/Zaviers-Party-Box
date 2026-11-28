@@ -9,3 +9,216 @@
 .animate-shake {
   animation: shake 0.3s ease-in-out;
 }
+
+@theme {
+  --color-gray-900: #15191f;
+  --color-gray-800: #20262e;
+  --color-gray-700: #2b3440;
+}
+
+:root {
+  background: var(--color-gray-900);
+  color: #f6f2e9;
+  color-scheme: dark;
+}
+
+body {
+  min-width: 0;
+}
+
+body, #root {
+  min-height: 100dvh;
+}
+
+:where(a, button, input, select):focus-visible {
+  outline: 2px solid #f1ce88;
+  outline-offset: 3px;
+}
+
+.game-menu, .game-screen {
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.game-menu {
+  width: 100%;
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+.game-menu-header {
+  margin: 28px 0 24px;
+}
+
+.game-menu-home .game-menu-header {
+  margin-top: clamp(24px, 9vh, 96px);
+}
+
+.game-menu-header img {
+  display: block;
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+
+.game-menu-header h1 {
+  font-size: clamp(2.25rem, 8vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.game-menu-list {
+  border-top: 1px solid #404854;
+}
+
+.game-menu-list li {
+  border-bottom: 1px solid #404854;
+}
+
+.game-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px 6px;
+}
+
+.game-menu-link:hover, .game-menu-link:focus-visible {
+  background: var(--color-gray-800);
+}
+
+.game-menu-label {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+
+.game-menu-label strong {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.game-menu-label > span, .game-menu-label small {
+  color: #b9c2ce;
+}
+
+.game-menu-label > span {
+  font-size: 0.9375rem;
+}
+
+.game-menu-icon {
+  flex: 0 0 32px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.game-menu-arrow {
+  color: #f1ce88;
+  font-size: 1.35rem;
+}
+
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 10px;
+  border-radius: 6px;
+  color: #e3e9f0;
+  font-size: 0.9375rem;
+}
+
+.page-back:hover {
+  background: var(--color-gray-800);
+}
+
+.game-screen {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--color-gray-900);
+}
+
+.game-screen-stack {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.game-panel {
+  padding: clamp(16px, 5vw, 30px);
+  border: 1px solid #343d49;
+  border-radius: 12px;
+  background: var(--color-gray-800);
+}
+
+@media (min-width: 640px) {
+  .game-screen, .game-menu {
+    padding-top: max(40px, env(safe-area-inset-top));
+  }
+}
+
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 28rem;
+  margin-bottom: 12px;
+}
+
+.word-hunt-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 28rem;
+  padding: 12px 4px;
+  border: 1px solid #343d49;
+  border-radius: 10px;
+  background: var(--color-gray-800);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.word-hunt-stats > div + div {
+  border-left: 1px solid #404854;
+}
+
+.word-hunt-stats dt {
+  color: #b9c2ce;
+  font-size: 0.8125rem;
+}
+
+.word-hunt-stats dd {
+  margin-top: 2px;
+  font-size: clamp(1.125rem, 5vw, 1.5rem);
+  font-weight: 750;
+}
+
+.wordle-tile {
+  width: clamp(2.1rem, min(12vw, 7.5dvh), 3.25rem);
+  aspect-ratio: 1;
+}
+
+.wordle-key-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(3px, 1vw, 6px);
+}
+
+.wordle-key {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 2.65rem;
+  min-height: 44px;
+  height: clamp(44px, 7dvh, 56px);
+}
+
+.wordle-key-wide {
+  flex-grow: 1.6;
+  max-width: 4rem;
+}

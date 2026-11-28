@@ -36,7 +36,7 @@ function EnterName({
   }
 
   return (
-    <div className="bg-gray-800 rounded-2xl p-8 shadow-2xl">
+    <div className="game-panel">
       <h2 className="text-3xl font-bold text-white mb-6 text-center">
         Enter Your Name
       </h2>

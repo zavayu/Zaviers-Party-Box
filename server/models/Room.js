@@ -74,6 +74,7 @@ export class Room {
       // Move player to new key in the map
       this.players.delete(oldKey)
       this.players.set(newPlayerId, playerToReconnect)
+      this.gameInstance?.onPlayerReconnected?.(oldKey, newPlayerId)
       
       return true
     }
@@ -103,10 +104,16 @@ export class Room {
       gameState: this.gameState
     }
 
-    if (this.gameType === 'imposter' && this.gamePhase !== 'results') {
-      roomState.gameState = { ...this.gameState }
-      delete roomState.gameState.secretWord
-      delete roomState.gameState.imposters
+    if (this.gameType === 'imposter') {
+      roomState.gameState = {
+        ...this.gameState,
+        availableCategories: this.gameInstance?.getAvailableCategories().map(category => category.name) ?? [],
+        currentTurnPlayerId: this.gameInstance?.getCurrentCluePlayer() ?? null,
+      }
+      if (this.gamePhase !== 'results') {
+        delete roomState.gameState.secretWord
+        delete roomState.gameState.imposters
+      }
     }
 
     // If there's a game instance, include computed scores
