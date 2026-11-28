@@ -222,3 +222,42 @@ body, #root {
   flex-grow: 1.6;
   max-width: 4rem;
 }
+
+.game-screen.imposter-screen {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+
+.imposter-action-bar {
+  position: fixed;
+  z-index: 20;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 12px max(16px, env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: var(--color-gray-900);
+}
+
+.imposter-action-inner {
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+.imposter-action {
+  display: block;
+  min-height: 60px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f1ce88;
+  color: #15191f;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.imposter-action:hover:not(:disabled) { background: #ffdf9e; }
+.imposter-action:disabled { background: var(--color-gray-700); color: #d1d5db; }
+
+.imposter-option {
+  min-height: 56px;
+  font-size: 1rem;
+}

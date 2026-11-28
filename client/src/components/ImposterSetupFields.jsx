@@ -6,7 +6,7 @@ export function categoryLabel(category) {
   return category?.replace(/_/g, ' ')
 }
 
-const fieldClass = 'block w-full min-h-11 mt-1 rounded-lg bg-gray-700 px-3 text-white'
+const fieldClass = 'block w-full imposter-option mt-1 rounded-lg bg-gray-700 px-3 text-white'
 
 export function CategoryField({ categories, value, onChange }) {
   const id = useId()
@@ -37,9 +37,9 @@ export function CountField({ label, value, min, max, onChange }) {
 
 export function HintField({ checked, onChange }) {
   return (
-    <label className="flex min-h-11 items-center gap-3">
-      <input type="checkbox" className="size-5" checked={checked} onChange={event => onChange(event.target.checked)} />
-      <span>Give the imposter a word hint when available</span>
+    <label className="flex imposter-option items-center gap-3">
+      <input type="checkbox" className="size-6 shrink-0" checked={checked} onChange={event => onChange(event.target.checked)} />
+      <span>Give the imposter a private hint</span>
     </label>
   )
 }

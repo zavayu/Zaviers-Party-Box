@@ -160,7 +160,7 @@ function OnlineGameLobby({
         Waiting for more players... (Minimum {minPlayers} players)
       </div>
 
-      {isHost && (
+      {isHost && onStartGame && (
         <button
           onClick={onStartGame}
           disabled={!canStart}

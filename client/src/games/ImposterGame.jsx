@@ -1,14 +1,14 @@
 import { useState } from 'react'
+import ImposterActionBar from '../components/ImposterActionBar'
 import ImposterRoleCard from '../components/ImposterRoleCard'
 import GAME_DATA from '../game-data/imposterData'
 
 import { CategoryField, CountField, HintField } from '../components/ImposterSetupFields'
 import ImposterClueOrder from '../components/ImposterClueOrder'
-import { getWordHint } from '../game-data/imposterHints'
+import { getHintedWords, getWordHint } from '../game-data/imposterHints'
 
 const categories = Object.keys(GAME_DATA)
-const primaryButton = 'w-full min-h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-lg'
-const secondaryButton = 'w-full min-h-12 bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-3 rounded-lg'
+const secondaryButton = 'w-full min-h-14 bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-3 rounded-lg'
 
 function shuffle(items) {
   const shuffled = [...items]
@@ -26,7 +26,7 @@ function ImposterGame({ onBack }) {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [playerCount, setPlayerCount] = useState(3)
   const [imposterCount, setImposterCount] = useState(1)
-  const [wordHints, setWordHints] = useState(false)
+  const [wordHints, setWordHints] = useState(true)
   const [usedWords, setUsedWords] = useState(new Set())
   const [round, setRound] = useState(null)
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
@@ -34,20 +34,25 @@ function ImposterGame({ onBack }) {
 
   const startRound = () => {
     const allowed = selectedCategory ? [selectedCategory] : categories
+    const wordsFor = category => {
+      const words = GAME_DATA[category].words
+      return wordHints ? getHintedWords(category, words) : words
+    }
     const unused = word => !usedWords.has(word.toLowerCase())
-    const available = allowed.filter(category => GAME_DATA[category].words.some(unused))
+    const available = allowed.filter(category => wordsFor(category).some(unused))
     const category = shuffle(available.length ? available : allowed)[0]
-    const words = GAME_DATA[category].words
+    const words = wordsFor(category)
     const choices = words.filter(available.length ? unused : word => word !== round?.secretWord)
     const secretWord = shuffle(choices.length ? choices : words)[0]
     const playerIndices = Array.from({ length: playerCount }, (_, index) => index)
 
     const nextUsed = new Set(usedWords)
-    if (!available.length) allowed.forEach(key => GAME_DATA[key].words.forEach(word => nextUsed.delete(word.toLowerCase())))
+    if (!available.length) allowed.forEach(key => wordsFor(key).forEach(word => nextUsed.delete(word.toLowerCase())))
     nextUsed.add(secretWord.toLowerCase())
     setUsedWords(nextUsed)
     setRound({
       category, secretWord,
+      wordHint: wordHints ? getWordHint(category, secretWord) : undefined,
       imposterIndices: shuffle(playerIndices).slice(0, imposterCount),
       clueOrder: shuffle(playerIndices),
     })
@@ -58,14 +63,23 @@ function ImposterGame({ onBack }) {
 
   const handleNextPlayer = () => {
     setIsRevealed(false)
-    if (currentPlayerIndex + 1 === playerCount) setGamePhase('clues')
+    if (currentPlayerIndex + 1 === playerCount) setGamePhase('table')
     else setCurrentPlayerIndex(currentPlayerIndex + 1)
   }
 
   const { category, secretWord, imposterIndices, clueOrder } = round ?? {}
 
+  const action = {
+    setup: { label: 'Start Round' },
+    playerReveal: isRevealed
+      ? { label: currentPlayerIndex + 1 === playerCount ? 'Hide & Begin Round' : 'Hide & Pass Phone', onClick: handleNextPlayer }
+      : { label: 'Reveal My Role', onClick: () => setIsRevealed(true) },
+    table: { label: 'Reveal Imposters', onClick: () => setGamePhase('results') },
+    results: { label: 'Play Again', onClick: startRound },
+  }[gamePhase]
+
   return (
-    <div className="game-screen">
+    <div className="game-screen imposter-screen">
       <div className="max-w-md w-full">
         <div className="flex items-center justify-between mb-4">
           <button onClick={gamePhase === 'setup' ? onBack : () => setGamePhase('setup')} className="page-back">
@@ -75,7 +89,7 @@ function ImposterGame({ onBack }) {
         </div>
 
         {gamePhase === 'setup' && (
-          <form className="game-panel space-y-5" onSubmit={event => { event.preventDefault(); startRound() }}>
+          <form id="imposter-setup" className="game-panel space-y-5" onSubmit={event => { event.preventDefault(); startRound() }}>
             <h1 className="text-3xl font-extrabold">Imposter</h1>
             <CategoryField categories={categories} value={selectedCategory} onChange={setSelectedCategory} />
             <div className="grid grid-cols-2 gap-3">
@@ -86,77 +100,31 @@ function ImposterGame({ onBack }) {
               <CountField label="Imposters" value={imposterCount} min={1} max={playerCount - 1} onChange={setImposterCount} />
             </div>
             <HintField checked={wordHints} onChange={setWordHints} />
-            <button className={primaryButton}>Start Round</button>
           </form>
         )}
 
-        {/* PLAYER REVEAL LOOP */}
         {gamePhase === 'playerReveal' && (
-          <div className="game-panel">
-            {!isRevealed ? (
-              <>
-                <h2 className="text-3xl font-bold text-white mb-8 text-center">
-                  Player {currentPlayerIndex + 1}
-                </h2>
-                <div className="bg-gray-700 rounded-xl p-8 mb-8 text-center">
-                  <p className="text-gray-300 text-xl mb-6">
-                    Make sure only you can see the screen, then tap below to reveal your role.
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    Don't let others see your screen!
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsRevealed(true)}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-8 rounded-xl text-xl transition-colors"
-                >
-                  Tap to Reveal
-                </button>
-              </>
+          <section className="game-panel text-center">
+            <h2 className="text-3xl font-bold mb-5">Player {currentPlayerIndex + 1}</h2>
+            {isRevealed ? (
+              <ImposterRoleCard
+                category={category}
+                isImposter={imposterIndices.includes(currentPlayerIndex)}
+                secretWord={secretWord}
+                wordHint={round.wordHint}
+              />
             ) : (
-              <>
-                <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                  Player {currentPlayerIndex + 1}
-                </h2>
-                <ImposterRoleCard
-                  category={category}
-                  isImposter={imposterIndices.includes(currentPlayerIndex)}
-                  secretWord={secretWord}
-                  wordHint={wordHints ? getWordHint(secretWord) : undefined}
-                />
-                <button
-                  onClick={handleNextPlayer}
-                  className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-                >
-                  {currentPlayerIndex + 1 === playerCount ? 'Hide & Start Clues' : 'Hide & Pass Phone'}
-                </button>
-              </>
+              <p className="text-gray-300">Keep the screen to yourself while you reveal your role.</p>
             )}
-          </div>
+          </section>
         )}
 
-        {gamePhase === 'clues' && (
+        {gamePhase === 'table' && (
           <section className="game-panel space-y-4">
-            <h2 className="text-2xl font-bold">First clues</h2>
-            <p>Take turns giving one word each. Start with Player {clueOrder[0] + 1}.</p>
+            <h2 className="text-2xl font-bold">Clues & Voting</h2>
+            <p>Give one word each in this order.</p>
             <ImposterClueOrder names={clueOrder.map(index => `Player ${index + 1}`)} />
-            <button className={primaryButton} onClick={() => setGamePhase('discussion')}>Start Discussion</button>
-          </section>
-        )}
-
-        {gamePhase === 'discussion' && (
-          <section className="game-panel space-y-4">
-            <h2 className="text-2xl font-bold">Discussion</h2>
-            <p>Compare clues and decide who seemed to be guessing.</p>
-            <button className={primaryButton} onClick={() => setGamePhase('voting')}>Start Voting</button>
-          </section>
-        )}
-
-        {gamePhase === 'voting' && (
-          <section className="game-panel space-y-4">
-            <h2 className="text-2xl font-bold">Vote</h2>
-            <p>On the count of three, point to the player you think is an imposter.</p>
-            <button className={primaryButton} onClick={() => setGamePhase('results')}>Reveal Imposters</button>
+            <p>Discuss the clues, then count to three and point to your suspect. Reveal the roles after everyone votes.</p>
           </section>
         )}
 
@@ -187,16 +155,20 @@ function ImposterGame({ onBack }) {
                 {secretWord}
               </p>
             </div>
-            <button
-              onClick={startRound}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
-            >
-              Play Again
-            </button>
             <button className={`${secondaryButton} mt-3`} onClick={() => setGamePhase('setup')}>Change Category</button>
           </div>
         )}
 
+        <ImposterActionBar>
+          <button
+            className="imposter-action"
+            type={gamePhase === 'setup' ? 'submit' : 'button'}
+            form={gamePhase === 'setup' ? 'imposter-setup' : undefined}
+            onClick={action.onClick}
+          >
+            {action.label}
+          </button>
+        </ImposterActionBar>
       </div>
     </div>
   )

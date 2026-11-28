@@ -1,5 +1,5 @@
 import { BaseGame } from './BaseGame.js'
-import { getWordHint } from './imposterHints.js'
+import { getHintedWords, getWordHint } from './imposterHints.js'
 
 // Full game data from the pass-and-play version
 const GAME_DATA = {
@@ -358,18 +358,22 @@ export class ImposterGame extends BaseGame {
 
   initializeGame(selectedCategory = null) {
     const allowed = Object.hasOwn(GAME_DATA, selectedCategory) ? [selectedCategory] : Object.keys(GAME_DATA)
+    const { imposterCount = 1, wordHints = true } = this.room.gameState
+    const wordsFor = category => {
+      const words = GAME_DATA[category].words
+      return wordHints ? getHintedWords(category, words) : words
+    }
     const unused = word => !this.usedWords.has(word.toLowerCase())
-    const available = allowed.filter(category => GAME_DATA[category].words.some(unused))
+    const available = allowed.filter(category => wordsFor(category).some(unused))
     const category = this.getRandomElement(available.length ? available : allowed)
-    const words = GAME_DATA[category].words
+    const words = wordsFor(category)
     const choices = words.filter(available.length ? unused : word => word !== this.lastWord)
     const secretWord = this.getRandomElement(choices.length ? choices : words)
     const playerIds = [...this.room.players.keys()]
-    const { imposterCount = 1, wordHints = false } = this.room.gameState
     const count = Math.min(imposterCount, playerIds.length - 1)
 
     if (!available.length) {
-      allowed.forEach(key => GAME_DATA[key].words.forEach(word => this.usedWords.delete(word.toLowerCase())))
+      allowed.forEach(key => wordsFor(key).forEach(word => this.usedWords.delete(word.toLowerCase())))
     }
     this.usedWords.add(secretWord.toLowerCase())
     this.lastWord = secretWord
@@ -398,7 +402,7 @@ export class ImposterGame extends BaseGame {
       roundNumber: this.room.gameState.roundNumber,
       secretWord: isImposter ? null : this.room.gameState.secretWord,
       wordHint: isImposter && this.room.gameState.wordHints
-        ? getWordHint(this.room.gameState.secretWord)
+        ? getWordHint(this.room.gameState.category, this.room.gameState.secretWord)
         : undefined
     }
   }
@@ -416,13 +420,15 @@ export class ImposterGame extends BaseGame {
 
   handleChatMessage(playerId, messageText) {
     // Check if in discussion phase
-    const isClueRound = this.room.gamePhase === 'clues'
-    if (!isClueRound && this.room.gamePhase !== 'discussion') {
+    const { gamePhase } = this.room
+    if (gamePhase !== 'clues' && gamePhase !== 'discussion') {
       return { success: false, error: 'Chat is only available during discussion phase' }
     }
 
     // Check if it's the player's turn
-    if (isClueRound && this.getCurrentCluePlayer() !== playerId) {
+    const cluePlayer = this.getCurrentCluePlayer()
+    const isClueRound = cluePlayer !== null
+    if (isClueRound && cluePlayer !== playerId) {
       return { success: false, error: 'It is not your turn to chat' }
     }
 
@@ -488,7 +494,11 @@ export class ImposterGame extends BaseGame {
           error: 'Wait for everyone to give a clue.'
         }
       case 'voting':
-        return { canAdvance: this.room.gamePhase === 'discussion' }
+        return {
+          canAdvance: this.room.gamePhase === 'discussion' ||
+            (this.room.gamePhase === 'clues' && !this.getCurrentCluePlayer()),
+          error: 'Wait for everyone to give a clue.'
+        }
       case 'results':
         if (this.room.gamePhase !== 'voting') return { canAdvance: false }
         if ([...this.room.players.values()].some(player => player.isConnected !== false &&

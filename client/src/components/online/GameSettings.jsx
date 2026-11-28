@@ -5,7 +5,7 @@ export default function GameSettings({ onClose, currentSettings, onUpdateSetting
   const maxImposters = Math.max(1, playerCount - 1)
   const [category, setCategory] = useState(currentSettings.selectedCategory ?? '')
   const [count, setCount] = useState(currentSettings.imposterCount ?? 1)
-  const [wordHints, setWordHints] = useState(currentSettings.wordHints ?? false)
+  const [wordHints, setWordHints] = useState(currentSettings.wordHints ?? true)
   const imposterCount = Math.min(count, maxImposters)
 
   return (
@@ -27,8 +27,8 @@ export default function GameSettings({ onClose, currentSettings, onUpdateSetting
         <CountField label="Imposters" value={imposterCount} min={1} max={maxImposters} onChange={setCount} />
         <HintField checked={wordHints} onChange={setWordHints} />
         <div className="flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 min-h-11 rounded-lg bg-gray-700 px-4 font-bold">Cancel</button>
-          <button className="flex-1 min-h-11 rounded-lg bg-blue-600 px-4 font-bold">Save</button>
+          <button type="button" onClick={onClose} className="flex-1 min-h-14 rounded-lg bg-gray-700 px-4 font-bold">Cancel</button>
+          <button className="flex-1 min-h-14 rounded-lg bg-blue-600 px-4 font-bold">Save</button>
         </div>
       </form>
     </div>
